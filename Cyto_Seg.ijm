@@ -46,12 +46,8 @@ function createParameterDialog(){
 	Dialog.addChoice("Choose", items, "yes");
 	Dialog.addNumber("rolling ball", roll);
 	Dialog.addMessage("");
-	Dialog.addNumber("randomization method", randw);
-	Dialog.addMessage("");
-	Dialog.addNumber("randomized graphs", randn);
-	Dialog.addMessage("");
-	Dialog.addNumber("depth", depth);
-	Dialog.addMessage("");
+	//Dialog.addNumber("depth", depth);
+	//Dialog.addMessage("");
 	Dialog.addNumber("sigma", sigma);
 	Dialog.addMessage("");
 	Dialog.addNumber("block size", block);
@@ -372,9 +368,7 @@ function mainMenu() {
 			choiceMask = Dialog.getChoice();
 			choiceBatch = Dialog.getChoice();
 			roll = Dialog.getNumber();
-			randw = Dialog.getNumber();
-			randn = Dialog.getNumber();
-			depth = Dialog.getNumber();
+			//depth = Dialog.getNumber();
 			sigma = Dialog.getNumber();
 			block = Dialog.getNumber();
 			small = Dialog.getNumber();
