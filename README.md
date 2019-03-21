@@ -13,11 +13,13 @@ Fiji Macro and GUI for CytoSeg to automatically extract and analyze the actin cy
 
 ### Workflow
 
-1. If you first start the plugin, it will prompt you to input the path to your Python 3 (Fiji will otherwise use the system  version of Python). You can find the Python 3 path by typing "which python3" in your terminal (Mac OS, Linux). Press "OK" to continue. Your Python 3 path will be saved for future sessions. You can change it by selecting "Reset Python3 path" in the CytoSeg2.0 main menu.
+#### Getting started 
+If you first start the plugin, it will prompt you to input the path to your Python 3 (Fiji will otherwise use the system  version of Python). You can find the Python 3 path by typing "which python3" in your terminal (Mac OS, Linux). Press "OK" to continue. Your Python 3 path will be saved for future sessions. You can change it by selecting "Reset Python3 path" in the CytoSeg2.0 main menu.
 
-2. You can choose whether to do a complete CytoSeg analysis or a specific step in the analysis.
+#### Analysis 
+You can choose whether to do a complete CytoSeg analysis or a specific step in the analysis.
 
-2.1 Complete Analysis
+##### Complete Analysis
 If you selected to do the complete analysis, you will be guided to different steps:
   
   a. Gauging
@@ -30,7 +32,7 @@ If you selected to do the complete analysis, you will be guided to different ste
    c. Extraction
    The extraction is done in Python 3. The pre-processed image and the mask will be used to extract a network from the cytoskeleton of every slice in the image. Additionally, for every extracted network a random network will be generated. The extracted and random networks and their node positions will be saved in the output folder, as well as a plot of the first image slice and the overlayed extracted network (colored according to the edge capacity). Calculated  network properties are saved in tables for both extracted and random networks.
     
-2.2 Selecte specific analysis steps
+##### Selecte specific analysis steps
     
    a. Gauging
    The gauging GUI will open, where you have to select an image. Note that the gauging is only working, if you have a mask for your image. If not, first draw a mask for that image. Once you selected your parameters, click "Choose Parameters" and return to the main menu.
