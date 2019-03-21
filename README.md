@@ -1,5 +1,6 @@
 # CytoSeg2.0
 Fiji Macro and GUI for CytoSeg to automatically extract and analyze the actin cytoskeleton from microscopy images. Please cite the following paper if you use the tool:
+
    Breuer, D., Nowak, J., Ivakov, A., Somssich, M., Persson, S. and Nikoloski, Z.
    System-wide organization of actin cytoskeleton determines organelle transport in hypocotyl plant cells.
    *PNAS*, **2017**, 114: E5741-5749.
