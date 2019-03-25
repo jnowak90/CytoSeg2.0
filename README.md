@@ -24,7 +24,7 @@ If you first start the plugin, it will prompt you to input the path to your Pyth
 You can choose whether to do a complete CytoSeg analysis or a specific step in the analysis.
 
 ##### Complete Analysis
-If you selected to do the complete analysis, you will be guided to different steps:
+If you selected to do the complete analysis, you will be guided trough different steps:
   
 *Gauging:*
 
