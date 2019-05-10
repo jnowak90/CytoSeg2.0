@@ -99,25 +99,25 @@ class GaugingGui:
 
         # frame for the scale bars
         self.frame = Frame(self.root)
-        self.LabelSigma = Label(self.frame,text="sigma")
+        self.LabelSigma = Label(self.frame,text="v_width")
         self.sigma = Scale(self.frame, from_=0.4, to=2.2, resolution=0.2, orient=HORIZONTAL,length=450, command=self.showValueSigma, showvalue=0)
         self.sigma.set(2.0)
         self.LabelSigmaValue = Label(self.frame, text="")
         self.sigma.bind("<ButtonRelease-1>", self.displaySkeleton)
 
-        self.LabelBlock = Label(self.frame,text="block")
+        self.LabelBlock = Label(self.frame,text="v_thres")
         self.block = Scale(self.frame, from_=20, to=112, resolution=10.0, orient=HORIZONTAL,length=450, command=self.showValueBlock, showvalue=0)
         self.block.set(101.0)
         self.LabelBlockValue = Label(self.frame, text="")
         self.block.bind("<ButtonRelease-1>", self.displaySkeleton)
 
-        self.LabelSmall = Label(self.frame,text="small")
+        self.LabelSmall = Label(self.frame,text="v_size")
         self.small = Scale(self.frame, from_=2.0, to=47.0, resolution=5.0, orient=HORIZONTAL,length=450, command=self.showValueSmall, showvalue=0)
         self.small.set(27.0)
         self.LabelSmallValue = Label(self.frame, text="")
         self.small.bind("<ButtonRelease-1>", self.displaySkeleton)
 
-        self.LabelFactr = Label(self.frame,text="factr")
+        self.LabelFactr = Label(self.frame,text="v_int")
         self.factr = Scale(self.frame, from_=0.1, to=2.0, resolution=0.2, orient=HORIZONTAL,length=450, command=self.showValueFactr, showvalue=0)
         self.factr.set(0.5)
         self.LabelFactrValue = Label(self.frame,text="")
@@ -164,7 +164,7 @@ class GaugingGui:
 
     # message that pops up when clicking Help
     def helpMessage(self):
-        messagebox.showinfo("Parameter information","sigma: width of filamentous structures to enhance with a 2D tubeness filter,\n\nblock: block size for adaptive median threshold,\n\nsmall: size of small objects to be removed,\n\nfactr: lowest average intensity of a component")
+        messagebox.showinfo("Parameter information","v_width: width of filamentous structures to enhance with a 2D tubeness filter,\n\nv_thres: block size for adaptive median threshold,\n\nv_size: size of small objects to be removed,\n\nv_int: lowest average intensity of a component")
 
 
     # have to cheat here, scale bar is not showing the intervals for block, small and factr as it should...
@@ -197,12 +197,12 @@ class GaugingGui:
             imageName = path.split('/')[-1].split('.')[0]
             imagePath = '/'.join(path.split('/')[:-1])
             imO = skimage.io.imread(self.filename, plugin='tifffile')
+            if imO.shape[2] in (3,4):
+                imO = np.swapaxes(imO, -1, -3)
+                imO = np.swapaxes(imO, -1, -2)
             mask = skimage.io.imread(imagePath+'/'+imageName+"_mask.tif", plugin='tifffile')>0
 
-            Z = 1
             shape = imO.shape
-            if (len(shape)>3):
-                Z = shape[3]
             imI = imO[0]
             imI = im2d3d(imI)
             imG = skimage.filters.gaussian(imI,sig)
