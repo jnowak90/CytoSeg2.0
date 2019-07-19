@@ -48,7 +48,9 @@ class CytoSeg:
         self.filterImg = glob.glob('*_filter.tif')
 
         self.imgRaw = skimage.io.imread(self.filterImg[0], plugin='tifffile')
-        self.imgRaw = skimage.color.rgb2gray(self.imgRaw)
+        if self.imgRaw.shape[2] in (3,4):
+            self.imgRaw = np.swapaxes(self.imgRaw, -1, -3)
+            self.imgRaw = np.swapaxes(self.imgRaw, -1, -2)
         self.slices = len(self.imgRaw)
         """
         add analysis for 3D graphs
