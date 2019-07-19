@@ -197,13 +197,14 @@ class GaugingGui:
             imageName = path.split('/')[-1].split('.')[0]
             imagePath = '/'.join(path.split('/')[:-1])
             imO = skimage.io.imread(self.filename, plugin='tifffile')
-            if imO.shape[2] in (3,4):
-                imO = np.swapaxes(imO, -1, -3)
-                imO = np.swapaxes(imO, -1, -2)
+            imO = skimage.color.rgb2gray(imO)
             mask = skimage.io.imread(imagePath+'/'+imageName+"_mask.tif", plugin='tifffile')>0
 
             shape = imO.shape
-            imI = imO[0]
+            if len(shape) == 2:
+                imI = imO
+            else:
+                imI = imO[0]
             imI = im2d3d(imI)
             imG = skimage.filters.gaussian(imI,sig)
             imA = skeletonize_graph(imG,mask,sig,blo,sma,fac)
