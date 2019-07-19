@@ -394,6 +394,17 @@ function mainMenu() {
 				if (choiceMask == "no") {
 					generateMask(filename, pathOutputImages+"/"+newFilename+"_mask.tif");
 				}
+				else {
+					dir = replace(pathToImage, filename, "");
+					if (checkFileExists(newFilename+"_mask.tif", dir) == false) {
+						Dialog.create("WARNING");
+						Dialog.addMessage("No mask was found for this image.");
+						Dialog.show();
+					}
+					else {
+						File.copy(dir+newFilename+"_mask.tif", pathOutputImages+"/"+newFilename+"_mask.tif");
+					}
+				}
 				print("\n#########################################\n\nPre-processing finished, post-processing in progress...\n");
 				// network extraction
 				pythonGraphAnalysis(pathToPython3, pathOutputImages, parameters);
@@ -406,21 +417,55 @@ function mainMenu() {
 				counter = 0;
 				extractionArray = newArray(0);
 				print("\n#########################################\n\nCyto Seg is running...\n");
-				for (i=0; i<imageList.length; i++) {
-					if(endsWith(imageList[i],"tif") || endsWith(imageList[i], "TIF") || endsWith(imageList[i], "tiff") || endsWith(imageList[i], "TIFF")){
-						pathOutputImages = createOutputFolder(pathToImageFolder+imageList[i], outputFolder);
-						print("\nFinshed pre-processing of image "+i+1+" of "+imageList.length+"...\n");
-						filename = replaceFileFormat(imageList[i]);
-						preprocessImage(filename, pathOutputImages);
-						if (choiceMask == "no") {
-							generateMask(imageList[i], pathOutputImages+"/"+filename+"_mask.tif");
+				if (choiceMask == "yes") {
+					for (i=0; i<imageList.length; i++) {
+						if(endsWith(imageList[i],"tif") || endsWith(imageList[i], "TIF") || endsWith(imageList[i], "tiff") || endsWith(imageList[i], "TIFF")){
+							if(endsWith(imageList[i],"_mask.tif") || endsWith(imageList[i], "_mask.TIF") || endsWith(imageList[i], "_mask.tiff") || endsWith(imageList[i], "_mask.TIFF")){
+								print("A mask image was skipped.");
+								counter += 1;
+							}
+							else {
+								pathOutputImages = createOutputFolder(pathToImageFolder+imageList[i], outputFolder);
+								print("\nFinshed pre-processing of image "+i+1+" of "+imageList.length+"...\n");
+								filename = replaceFileFormat(imageList[i]);
+								preprocessImage(filename, pathOutputImages);
+								if (checkFileExists(filename+"_mask.tif", pathToImageFolder) == false) {
+									generateMask(imageList[i], pathOutputImages+"/"+filename+"_mask.tif");
+								}
+								else {
+									File.copy(pathToImageFolder+filename+"_mask.tif", pathOutputImages+"/"+filename+"_mask.tif");
+								}
+							}
+								array = newArray(pathOutputImages);
+								extractionArray = Array.concat(extractionArray, array);
 						}
-						array = newArray(pathOutputImages);
-						extractionArray = Array.concat(extractionArray, array);
+						else {
+							print("A file that is not a .tif file was skipped.");
+							counter += 1;
+						}
 					}
-					else {					
-						print("A file that is not a .tif file was skipped.");
-						counter += 1;
+				}
+				else {					
+					for (i=0; i<imageList.length; i++) {
+						if(endsWith(imageList[i],"tif") || endsWith(imageList[i], "TIF") || endsWith(imageList[i], "tiff") || endsWith(imageList[i], "TIFF")){
+							if(endsWith(imageList[i],"_mask.tif") || endsWith(imageList[i], "_mask.TIF") || endsWith(imageList[i], "_mask.tiff") || endsWith(imageList[i], "_mask.TIFF")){
+								print("A mask image was skipped.");
+								counter += 1;
+							}
+							else {
+								pathOutputImages = createOutputFolder(pathToImageFolder+imageList[i], outputFolder);
+								print("\nFinshed pre-processing of image "+i+1+" of "+imageList.length+"...\n");
+								filename = replaceFileFormat(imageList[i]);
+								preprocessImage(filename, pathOutputImages);
+								generateMask(imageList[i], pathOutputImages+"/"+filename+"_mask.tif");
+								array = newArray(pathOutputImages);
+								extractionArray = Array.concat(extractionArray, array);
+							}
+						}
+						else {					
+							print("A file that is not a .tif file was skipped.");
+							counter += 1;
+						}
 					}
 				}
 				if (imageList.length == counter) {
@@ -445,8 +490,8 @@ function mainMenu() {
 		Dialog.addString("Path:","");
 		Dialog.show();
 		pathToPython3 = Dialog.getString();
-		pathToCytoSeg = getDirectory("plugins") + "Cyto_Seg/python3path.txt";
-		File.saveString(pathToPython3, pathToCytoSeg);
+		pathToCytoSeg = getDirectory("plugins");
+		File.saveString(pathToPython3, pathToCytoSeg+ "CytoSeg/python3path.txt");
 		mainMenu();
 	}
 	if (isOpen("Log")) {
@@ -454,7 +499,7 @@ function mainMenu() {
 		selectWindow("Log");
 		pathOutput = pathToCytoSeg + "log.txt";
 		saveAs('txt', pathOutput);
-		run("Close");
+		//run("Close");
 	}
 	Dialog.create("Goodbye");
 	Dialog.addMessage("CytoSeg Analysis finished");
