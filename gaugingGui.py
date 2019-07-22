@@ -196,8 +196,7 @@ class GaugingGui:
             path = self.filename
             imageName = path.split('/')[-1].split('.')[0]
             imagePath = '/'.join(path.split('/')[:-1])
-            imO = skimage.io.imread(self.filename, plugin='tifffile')
-            imO = skimage.color.rgb2gray(imO)
+            imO = skimage.io.imread(self.filename, plugin='tifffile', as_gray=True)
             mask = skimage.io.imread(imagePath+'/'+imageName+"_mask.tif", plugin='tifffile')>0
 
             shape = imO.shape
