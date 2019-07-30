@@ -14,28 +14,19 @@ matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 from packaging.version import Version
 
-def im2d3d(im):
-    if(len(im.shape)==2):
-        im=im[:,:,np.newaxis]
-    else:
-        im=im
-    return im
-
 def skeletonize_graph(imO,mask,sigma,block,small,factr):
     imO-=imO[mask].min()
     imO*=255.0/imO.max()
-    ly,lx,lz=imO.shape
+    ly,lx=imO.shape
     imR=imO.copy()*0
     imT=imO.copy()*0
-    for z in range(lz):
-        imR[:,:,z] = tube_filter(imO[:,:,z],sigma)
-        threshold = skimage.filters.threshold_local(imR[:,:,z],block)
-        imT[:,:,z] = imR[:,:,z] > threshold
+    imR = tube_filter(imO,sigma)
+    threshold = skimage.filters.threshold_local(imR,block)
+    imT = imR > threshold
     imS=skimage.morphology.skeletonize_3d(imT>0)
-    ones=np.ones((3,3,3))
+    ones=np.ones((3,3))
     imC=skimage.morphology.remove_small_objects(imS,small,connectivity=2)>0
-    for z in range(lz):
-        imC[:,:,z]=imC[:,:,z]*mask
+    imC=imC*mask
     imC=imC>0
     imL,N=sp.ndimage.label(imC,structure=ones)
     mean=imO[imC].mean()
@@ -196,15 +187,21 @@ class GaugingGui:
             path = self.filename
             imageName = path.split('/')[-1].split('.')[0]
             imagePath = '/'.join(path.split('/')[:-1])
-            imO = skimage.io.imread(self.filename, plugin='tifffile', as_gray=True)
+            imO = skimage.io.imread(self.filename, plugin='tifffile')
             mask = skimage.io.imread(imagePath+'/'+imageName+"_mask.tif", plugin='tifffile')>0
 
             shape = imO.shape
-            if len(shape) == 2:
+            if len(shape) == 2: #grayscale single image
                 imI = imO
-            else:
+            elif len(shape) == 3:
+                if shape[2] in [3,4]: #rgb single image
+                    imO = skimage.color.rgb2gray(imO)
+                    imI = imO
+                else: #grayscale image stack
+                    imI = imO[0]
+            else: #rgb image stack
+                imO = skimage.color.rgb2gray(imO)
                 imI = imO[0]
-            imI = im2d3d(imI)
             imG = skimage.filters.gaussian(imI,sig)
             imA = skeletonize_graph(imG,mask,sig,blo,sma,fac)
 
