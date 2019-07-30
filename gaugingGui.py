@@ -14,40 +14,37 @@ matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 from packaging.version import Version
 
-def skeletonize_graph(imO,mask,sigma,block,small,factr):
-    imO-=imO[mask].min()
-    imO*=255.0/imO.max()
-    ly,lx=imO.shape
-    imR=imO.copy()*0
-    imT=imO.copy()*0
-    imR = tube_filter(imO,sigma)
-    threshold = skimage.filters.threshold_local(imR,block)
-    imT = imR > threshold
-    imS=skimage.morphology.skeletonize_3d(imT>0)
-    ones=np.ones((3,3))
-    imC=skimage.morphology.remove_small_objects(imS,small,connectivity=2)>0
-    imC=imC*mask
-    imC=imC>0
-    imL,N=sp.ndimage.label(imC,structure=ones)
-    mean=imO[imC].mean()
-    means=[np.mean(imO[imL==n]) for n in range(1,N+1)]
-    imA=1.0*imC.copy()
-    for n in range(1,N+1):
-        if(means[n-1]<mean*factr):
-            imA[imL==n]=0
-    imA=skimage.morphology.remove_small_objects(imA>0,2,connectivity=8)
-    return imA
+def skeletonize_graph(gaussianImage, mask, sigma, block, small, factr):
+    gaussianImage -= gaussianImage[mask].min()
+    gaussianImage *= 255.0 / gaussianImage.max()
+    tubeImage = tube_filter(gaussianImage, sigma)
+    threshold = skimage.filters.threshold_local(tubeImage, block)
+    binaryImage = tubeImage > threshold
+    skeletonImage = skimage.morphology.skeletonize_3d(binaryImage > 0)
+    ones = np.ones((3, 3))
+    cleanedImage = skimage.morphology.remove_small_objects(skeletonImage, small, connectivity=2) > 0
+    cleanedImage = cleanedImage * mask
+    cleanedImage = cleanedImage > 0
+    labeledImage, labels = sp.ndimage.label(cleanedImage, structure=ones)
+    mean = gaussianImage[cleanedImage].mean()
+    means = [np.mean(gaussianImage[labeledImage == n]) for n in range(1, labels + 1)]
+    intensityImage = 1.0 * cleanedImage.copy()
+    for n in range(1, labels + 1):
+        if(means[n-1] < mean * factr):
+            intensityImage[labeledImage == n] = 0
+    finalImage = skimage.morphology.remove_small_objects(intensityImage > 0, 2, connectivity=8)
+    return(finalImage)
 
-def tube_filter(imO,sigma):
+def tube_filter(gaussianImage, sigma):
     if Version(skimage.__version__) < Version('0.15'):
-        imH=skimage.feature.hessian_matrix(imO,sigma=sigma,mode='reflect')
-        imM=skimage.feature.hessian_matrix_eigvals(imH[0],imH[1],imH[2])
+        hessianImage = skimage.feature.hessian_matrix(gaussianImage, sigma=sigma, mode='reflect')
+        eigvalsImage = skimage.feature.hessian_matrix_eigvals(hessianImage[0], hessianImage[1], hessianImage[2])
     else:
-        imH=skimage.feature.hessian_matrix(imO,sigma=sigma,mode='reflect',order='xy')
-        imM=skimage.feature.hessian_matrix_eigvals(imH)
-    imR=-1.0*imM[1]
-    imT=255.0*(imR-imR.min())/(imR.max()-imR.min())
-    return imT
+        hessianImage = skimage.feature.hessian_matrix(gaussianImage, sigma=sigma, mode='reflect', order='xy')
+        eigvalsImage = skimage.feature.hessian_matrix_eigvals(hessianImage)
+    negativeImage = -1.0 * eigvalsImage[1]
+    finalImage = 255.0 * (negativeImage - negativeImage.min()) / (negativeImage.max() - negativeImage.min())
+    return(finalImage)
 
 # set randw, randn and depth from parameter list
 pathToPlugin = sys.argv[0]
@@ -179,38 +176,38 @@ class GaugingGui:
     def displaySkeleton(self,ev):
         self.textVar.set("If you are satisfied with the segmentation, press 'Choose Parameters' to save\n the parameters for the CytoSeg analysis and go back to the main menu.")
         if self.filename!="":
-            sig = self.sigma.get()
-            blo = self.block.get()+1
-            sma = self.small.get()+2
-            fac = self.factr.get()-0.1
+            sigma = self.sigma.get()
+            block = self.block.get()+1
+            small = self.small.get()+2
+            factr = self.factr.get()-0.1
 
             path = self.filename
             imageName = path.split('/')[-1].split('.')[0]
             imagePath = '/'.join(path.split('/')[:-1])
-            imO = skimage.io.imread(self.filename, plugin='tifffile')
+            rawImage = skimage.io.imread(self.filename, plugin='tifffile')
             mask = skimage.io.imread(imagePath+'/'+imageName+"_mask.tif", plugin='tifffile')>0
 
-            shape = imO.shape
+            shape = rawImage.shape
             if len(shape) == 2: #grayscale single image
-                imI = imO
+                firstImage = rawImage.copy()
             elif len(shape) == 3:
                 if shape[2] in [3,4]: #rgb single image
-                    imO = skimage.color.rgb2gray(imO)
-                    imI = imO
+                    grayscaleImage = skimage.color.rgb2gray(rawImage)
+                    firstImage = grayscaleImage.copy()
                 else: #grayscale image stack
-                    imI = imO[0]
+                    firstImage = rawImage[0]
             else: #rgb image stack
-                imO = skimage.color.rgb2gray(imO)
-                imI = imO[0]
-            imG = skimage.filters.gaussian(imI,sig)
-            imA = skeletonize_graph(imG,mask,sig,blo,sma,fac)
+                grayscaleImage = skimage.color.rgb2gray(rawImage)
+                firstImage = grayscaleImage[0]
+            gaussianImage = skimage.filters.gaussian(firstImage, sigma)
+            skeletonImage = skeletonize_graph(gaussianImage, mask, sigma, block, small, factr)
 
-            fig=plt.figure()
-            plt.imshow(imI.reshape(shape[1],shape[2]),cmap='gray_r')
-            imA = np.ma.masked_where(imA == 0, imA)
-            plt.imshow(imA.reshape(shape[1],shape[2]),cmap='autumn')
+            fig = plt.figure()
+            plt.imshow(firstImage, cmap='gray_r')
+            binarySkeletonImage = np.ma.masked_where(skeletonImage == 0, skeletonImage)
+            plt.imshow(binarySkeletonImage, cmap='autumn')
             plt.axis('off')
-            fig.savefig(imagePath+'/skeletonOnImage.png',bbox_inches='tight',dpi=300)
+            fig.savefig(imagePath+'/skeletonOnImage.png', bbox_inches='tight', dpi=300)
 
             self.img = Image.open(imagePath+'/skeletonOnImage.png')
             if self.img.size[0] == self.img.size[1]:
