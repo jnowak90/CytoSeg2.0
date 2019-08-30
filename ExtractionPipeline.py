@@ -126,9 +126,9 @@ class CytoSeg:
             plt.axis(axis)
             plt.axis('off')
             if self.osSystem == 1:
-                plt.savefig(self.pathToFolder + '\\out_plot.pdf')
+                plt.savefig(self.pathToFolder + '\\ExtractedNetworks.pdf')
             else:
-                plt.savefig(self.pathToFolder + '/out_plot.pdf')
+                plt.savefig(self.pathToFolder + '/ExtractedNetworks.pdf')
 
     def saveData(self, originalData, randomData):
         properties = ['time','# nodes','# edges','# connected components','avg. edge capacity','assortativity','avg. path length','CV path length','algebraic connectivity','CV edge angles','crossing number']
