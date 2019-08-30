@@ -10,9 +10,9 @@ Fiji Macro and GUI for CytoSeg to automatically extract and analyze the actin cy
 - Only tif files are supported.
 - Only image stacks are supported, single images will raise an error.
 - The following plugins have to be installed in Fiji (in the mentioned order):
-..- StackReg (http://bigwww.epfl.ch/thevenaz/stackreg/)
-..- TurboReg (http://bigwww.epfl.ch/thevenaz/turboreg/)
-..- MultiStackReg (http://bradbusse.net/sciencedownloads.html)
+  - StackReg (http://bigwww.epfl.ch/thevenaz/stackreg/)
+  - TurboReg (http://bigwww.epfl.ch/thevenaz/turboreg/)
+  - MultiStackReg (http://bradbusse.net/sciencedownloads.html)
 - An installation of Python 3 is required. Following modules have to be installed (used versions during development in *brackets*):
   - numpy (*1.14.0*)
   - scipy (*1.2.1*)
@@ -75,12 +75,12 @@ If you selected to do the complete analysis, you will be guided trough different
   
 ### Output
 The following outputs are generated when using the pre-processing and extraction pipeline:
-..- **\*\_filter.tif**: pre-processed image
-..- **\*\_mask.tif**: mask of ROI for image
-..- **originalGraphs.gpickle**: collection of all extracted networks from the input image (one network per image slice)
-..- **randomGraphs.gpickle**: collection of randomized networks for input image (one randomized network per extracted network)
-..- **originalGraphPositions.npy**: node positions for original networks
-..- **randomGraphPositions.npy**: node positions for random networks
-..- **ExtractedNetworks.pdf**: plot of the original and randomized extracted network of the first image slice
-..- **originalGraphProperties.csv**: table of graph properties for the original networks 
-..- **randomGraphProperties.csv**: table of graph properties for the random networks
+  - **\*\_filter.tif**: pre-processed image
+  - **\*\_mask.tif**: mask of ROI for image
+  - **originalGraphs.gpickle**: collection of all extracted networks from the input image (one network per image slice)
+  - **randomGraphs.gpickle**: collection of randomized networks for input image (one randomized network per extracted network)
+  - **originalGraphPositions.npy**: node positions for original networks
+  - **randomGraphPositions.npy**: node positions for random networks
+  - **ExtractedNetworks.pdf**: plot of the original and randomized extracted network of the first image slice
+  - **originalGraphProperties.csv**: table of graph properties for the original networks 
+  - **randomGraphProperties.csv**: table of graph properties for the random networks
