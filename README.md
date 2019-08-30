@@ -5,20 +5,41 @@ Fiji Macro and GUI for CytoSeg to automatically extract and analyze the actin cy
    System-wide organization of actin cytoskeleton determines organelle transport in hypocotyl plant cells.
    *PNAS*, **2017**, 114: E5741-5749.
 
+### Requirements
+
+- Only tif files are supported.
+- Only image stacks are supported, single images will raise an error.
+- The following plugins have to be installed in Fiji (in the mentioned order):
+..- StackReg (http://bigwww.epfl.ch/thevenaz/stackreg/)
+..- TurboReg (http://bigwww.epfl.ch/thevenaz/turboreg/)
+..- MultiStackReg (http://bradbusse.net/sciencedownloads.html)
+- An installation of Python 3 is required. Following modules have to be installed (used versions during development in *brackets*):
+  - numpy (*1.14.0*)
+  - scipy (*1.2.1*)
+  - matplotlib (*2.02*) 
+  - scikit-image (*0.18.2*)
+  - PIL (*5.0.0*)
+  - networkx (*2.1*)
+  - pandas (*0.20.3*)
+  - shapely (*1.5.17*)
+  - packaging (*16.8*)
+
 ### Installation
 
-1. Download the zip file and decompress.
+1. Make sure all required Fiji plugins and Python 3 modules are installed (see Requirements).
 
-2. Copy "CytoSeg" folder to the Fiji directory (Mac: Fiji.App) > Plugins.
+2. Download the zip file and decompress. Rename the decompressed folder to "CytoSeg".
 
-3. Start Fiji.
+3. Copy "CytoSeg" folder to the plugins folder of the Fiji directory (Fiji.app).
 
-4. The macro should be now in Plugins > CytoSeg.
+4. Start Fiji. If Fiji was already open, restart it.
+
+5. The macro should be now in Plugins > CytoSeg.
 
 ### Workflow
 
 #### Getting started 
-If you first start the plugin, it will prompt you to input the path to your Python 3 (Fiji will otherwise use the system  version of Python). You can find the Python 3 path by typing "which python3" in your terminal (Mac OS, Linux). Press "OK" to continue. Your Python 3 path will be saved for future sessions. You can change it by selecting "Reset Python3 path" in the CytoSeg2.0 main menu.
+If you first start the plugin, it will prompt you to input the path to your Python 3 (Fiji will otherwise use the system  version of Python). You can find the Python 3 path by typing "which python3" in your terminal (Mac OS, Linux). If you use Windows search for python.exe with the Search button and open and copy the file location. Press "OK" to continue. Your Python 3 path will be saved for future sessions. You can change it by selecting "Reset Python3 path" in the CytoSeg2.0 main menu.
 
 #### Analysis 
 You can choose whether to do a complete CytoSeg analysis or a specific step in the analysis.
@@ -52,17 +73,14 @@ If you selected to do the complete analysis, you will be guided trough different
 
    Select the name of your output folder and if you want to use already existing masks (applicable if you already ran this part before). You can also select the silent mode here and the different parameters. If you selected parameters before during gauging, the parameters will be selected here automatically. 
   
-### Requirements
-
-- Only tif files are supported.
-- TurboReg has to be installed in Fiji (http://bigwww.epfl.ch/thevenaz/turboreg/).
-- MultiStackReg has to be installed in Fiji (http://bradbusse.net/sciencedownloads.html).
-- An installation of Python 3 is required. Following modules have to be installed:
-  - scikit-image
-  - PIL
-  - networkx
-  - pandas
-  - shapely
-  - numpy
-  - scipy
-  - tkinter
+### Output
+The following outputs are generated when using the pre-processing and extraction pipeline:
+..- **\*\_filter.tif**: pre-processed image
+..- **\*\_mask.tif**: mask of ROI for image
+..- **originalGraphs.gpickle**: collection of all extracted networks from the input image (one network per image slice)
+..- **randomGraphs.gpickle**: collection of randomized networks for input image (one randomized network per extracted network)
+..- **originalGraphPositions.npy**: node positions for original networks
+..- **randomGraphPositions.npy**: node positions for random networks
+..- **ExtractedNetworks.pdf**: plot of the original and randomized extracted network of the first image slice
+..- **originalGraphProperties.csv**: table of graph properties for the original networks 
+..- **randomGraphProperties.csv**: table of graph properties for the random networks
