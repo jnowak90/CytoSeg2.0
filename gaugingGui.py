@@ -48,22 +48,28 @@ def tube_filter(gaussianImage, sigma):
 
 # set randw, randn and depth from parameter list
 pathToPlugin = sys.argv[0]
-pathToPlugin = '/'.join(pathToPlugin.split('/')[:-1])
+filename = sys.argv[1]
+osSystem = int(sys.argv[2])
+if osSystem == 1:
+    pathToPlugin = '\\'.join(pathToPlugin.split('\\')[:-1])
+else:
+    pathToPlugin = '/'.join(pathToPlugin.split('/')[:-1])
 roll = 50
 randw = 1
 randn = 1
 depth = 7.75
-filename = sys.argv[1]
+
 
 class GaugingGui:
 
-    def __init__(self,root, filename):
+    def __init__(self,root, filename, pathToPlugin, osSystem):
         self.root = root
         if filename == 'None':
             self.filename = ""
         else:
             self.filename = filename
-        print(self.filename)
+        self.pathToPlugin = pathToPlugin
+        self.osSystem = osSystem
         self.past = 1
 
         self.root.title('CytoSeg 2.0 - Gauging')
@@ -131,7 +137,10 @@ class GaugingGui:
 
     # select image and open in canvas
     def openImage(self):
-        self.lastdir = './'
+        if self.osSystem == 1:
+            self.lastdir = self.pathToPlugin
+        else:
+            self.lastdir = './'
         if self.filename == "":
             self.filename = filedialog.askopenfilename(initialdir = self.lastdir, title ="Select image!",filetypes = (("png images","*.png") , ("tif images","*.tif"), ("jpeg images","*.jpg")) )
         self.img = Image.open(self.filename)
@@ -171,7 +180,10 @@ class GaugingGui:
     # save the selected parameters in a file
     def get_parameters(self):
         params = "" + str(roll) + ","+ str(randw) + "," + str(randn) + "," + str(depth) + "," + str(self.sigma.get()) + "," + str(self.block.get()+1) + "," + str(self.small.get()+2) + "," + str(format(float(self.factr.get())-0.1,".1f"))
-        np.savetxt(pathToPlugin+"/defaultParameter.txt",[params],fmt='%s')
+        if self.osSystem == 1:
+            np.savetxt(self.pathToPlugin+"\\defaultParameter.txt",[params],fmt='%s')
+        else:
+            np.savetxt(self.pathToPlugin+"/defaultParameter.txt",[params],fmt='%s')
 
     def displaySkeleton(self,ev):
         self.textVar.set("If you are satisfied with the segmentation, press 'Choose Parameters' to save\n the parameters for the CytoSeg analysis and go back to the main menu.")
@@ -182,10 +194,21 @@ class GaugingGui:
             factr = self.factr.get()-0.1
 
             path = self.filename
-            imageName = path.split('/')[-1].split('.')[0]
-            imagePath = '/'.join(path.split('/')[:-1])
-            rawImage = skimage.io.imread(self.filename, plugin='tifffile')
-            mask = skimage.io.imread(imagePath+'/'+imageName+"_mask.tif", plugin='tifffile')>0
+            print("path:", path)
+            if self.osSystem == 1:
+                path = path.replace("/", "\\")
+                print("New path:", path)
+                imageName = path.split('\\')[-1].split('.')[0]
+                imagePath = '\\'.join(path.split('\\')[:-1])
+                print("imageName:", imageName)
+                print("imagePath:", imagePath)
+                rawImage = skimage.io.imread(self.filename, plugin='tifffile')
+                mask = skimage.io.imread(imagePath+'\\'+imageName+"_mask.tif", plugin='tifffile')>0
+            else:
+                imageName = path.split('/')[-1].split('.')[0]
+                imagePath = '/'.join(path.split('/')[:-1])
+                rawImage = skimage.io.imread(self.filename, plugin='tifffile')
+                mask = skimage.io.imread(imagePath+'/'+imageName+"_mask.tif", plugin='tifffile')>0
 
             shape = rawImage.shape
             if len(shape) == 2: #grayscale single image
@@ -207,9 +230,13 @@ class GaugingGui:
             binarySkeletonImage = np.ma.masked_where(skeletonImage == 0, skeletonImage)
             plt.imshow(binarySkeletonImage, cmap='autumn')
             plt.axis('off')
-            fig.savefig(imagePath+'/skeletonOnImage.png', bbox_inches='tight', dpi=300)
+            if self.osSystem == 1:
+                fig.savefig(imagePath+'\\skeletonOnImage.png', bbox_inches='tight', dpi=300)
+                self.img = Image.open(imagePath+'\\skeletonOnImage.png')
+            else:
+                fig.savefig(imagePath+'/skeletonOnImage.png', bbox_inches='tight', dpi=300)
+                self.img = Image.open(imagePath+'/skeletonOnImage.png')
 
-            self.img = Image.open(imagePath+'/skeletonOnImage.png')
             if self.img.size[0] == self.img.size[1]:
                 self.resized = self.img.resize((500, 500),Image.ANTIALIAS)
             else:
@@ -225,5 +252,5 @@ class GaugingGui:
 
 
 master = Tk()
-my_gui = GaugingGui(master, filename)
+my_gui = GaugingGui(master, filename, pathToPlugin, osSystem)
 master.mainloop()
