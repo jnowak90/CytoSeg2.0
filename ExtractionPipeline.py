@@ -8,6 +8,7 @@
 ################### imports
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import networkx as nx
 import numpy as np
 import os
@@ -19,6 +20,7 @@ import skimage.io
 import skimage.filters
 import sys
 import glob
+from collections import Counter
 import utils
 
 print("\nYour python version used for this script:")
@@ -97,38 +99,54 @@ class CytoSeg:
         self.normalizedGraph = utils.normalize_graph(self.centralizedGraph)
         self.graphProperties = utils.compute_graph(self.normalizedGraph, graphPosition, mask)
         return(self.normalizedGraph, self.graphProperties, self.unifiedGraph)
+        
+    def most_frequent(self, List): 
+        occurence_count = Counter(List) 
+        return occurence_count.most_common(1)[0][0] 
 
     def plotSkeleton(self, originalData, randomData):
             originalGraph, originalPosition = originalData[0][1], originalData[0][2]
             randomGraph, randomPosition = randomData[0][1], randomData[0][2]
-
-            plt.clf()
-            gs = mpl.gridspec.GridSpec(1, 3, width_ratios=[1,1,1], height_ratios=[1], left=0.01, bottom=0.01, right=0.99, top=0.99, wspace=0.1, hspace=0.1)
-            aspect = 2.0
-            alpha = 1.0
-            lw = 1.5
-            wh = np.array(np.where(self.mask))[::-1]
-            axis = np.hstack(zip(np.nanmin(wh, 1), np.nanmax(wh, 1)))
-
-            plt.subplot(gs[0])
-            plt.title('biological\nactin network')
-            plt.imshow(self.imgRaw[0], cmap='Greys', interpolation='nearest', aspect=aspect)
-            originalEdgeCapacity = 1.0 * np.array([d['capa'] for u,v,d in originalGraph.edges(data=True)])
-            nx.draw_networkx_edges(originalGraph, originalPosition[:,:2], edge_color=plt.cm.plasma(originalEdgeCapacity / originalEdgeCapacity.max()), width=lw, alpha=alpha)
-            plt.axis(axis)
-            plt.axis('off')
-
-            plt.subplot(gs[1])
-            plt.title('randomized\nactin network')
-            plt.imshow(self.imgRaw[0], cmap='Greys', interpolation='nearest', aspect=aspect)
-            randomEdgeCapacity = 1.0 * np.array([d['capa'] for u,v,d in randomGraph.edges(data=True)])
-            nx.draw_networkx_edges(randomGraph, randomPosition[:,:2], edge_color=plt.cm.plasma(randomEdgeCapacity / randomEdgeCapacity.max()), width=lw, alpha=alpha)
-            plt.axis(axis)
-            plt.axis('off')
-            if self.osSystem == 1:
-                plt.savefig(self.pathToFolder + '\\ExtractedNetworks.pdf')
+          
+            if self.most_frequent(self.imgRaw[0].flatten()) <= 128:
+                cmapImage = 'gray_r'
             else:
-                plt.savefig(self.pathToFolder + '/ExtractedNetworks.pdf')
+                cmapImage = 'gray'
+                
+            fig, (ax1, ax2) = plt.subplots(ncols=2)
+            
+            ax1.imshow(self.imgRaw[0], cmap=cmapImage)
+            ax1.set_title('Biological actin network', fontsize=7)
+            originalEdgeCapacity = 1.0 * np.array([d['capa'] for u,v,d in originalGraph.edges(data=True)])
+            nx.draw_networkx_edges(originalGraph, originalPosition[:,:2], edge_color=plt.cm.plasma(originalEdgeCapacity / originalEdgeCapacity.max()), width=1.2, ax=ax1)
+            divider = make_axes_locatable(ax1)
+            cax1 = divider.append_axes("right", size="5%", pad=0.05)
+            m1 = plt.cm.ScalarMappable(cmap="plasma")
+            m1.set_array(originalEdgeCapacity)
+            cbar1 = fig.colorbar(m1, cax=cax1)
+            cbar1.ax.tick_params(labelsize=7)
+            ax1.axes.get_yaxis().set_visible(False)
+            ax1.axes.get_xaxis().set_visible(False)
+            
+            ax2.imshow(self.imgRaw[0], cmap=cmapImage)
+            ax2.set_title('Randomized actin network', fontsize=7)
+            randomEdgeCapacity = 1.0 * np.array([d['capa'] for u,v,d in randomGraph.edges(data=True)])
+            nx.draw_networkx_edges(randomGraph, randomPosition[:,:2], edge_color=plt.cm.plasma(randomEdgeCapacity / randomEdgeCapacity.max()), width=1.2, ax=ax2)
+            divider = make_axes_locatable(ax2)
+            cax2 = divider.append_axes("right", size="5%", pad=0.05)
+            m2 = plt.cm.ScalarMappable(cmap="plasma")
+            m2.set_array(randomEdgeCapacity)
+            cbar2 = fig.colorbar(m2, cax=cax2)
+            cbar2.ax.tick_params(labelsize=7)
+            ax2.axes.get_yaxis().set_visible(False)
+            ax2.axes.get_xaxis().set_visible(False)
+            
+            plt.tight_layout(h_pad=1)
+            
+            if self.osSystem == 1:
+                fig.savefig(self.pathToFolder + "\\ExtractedNetworks.png", box_inches="tight", dpi=300)
+            else:
+                fig.savefig(self.pathToFolder + "/ExtractedNetworks.png", box_inches="tight", dpi=300)
 
     def saveData(self, originalData, randomData):
         properties = ['time','# nodes','# edges','# connected components','avg. edge capacity','assortativity','avg. path length','CV path length','algebraic connectivity','CV edge angles','crossing number']
