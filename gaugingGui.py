@@ -73,7 +73,14 @@ class GaugingGui:
         self.past = 1
 
         self.root.title('CytoSeg 2.0 - Gauging')
-        self.root.geometry('600x800')
+        if self.root.winfo_screenheight() > 1000:
+            self.height, self.width = 800, 600
+        else:
+            self.height = int(self.root.winfo_screenheight() * 0.9)
+            self.width = int(self.height * 0.75)
+        self.root.geometry('%dx%d' % (self.width, self.height))
+        self.imageHeight = int(self.height * 0.625)
+        print(self.imageHeight, type(self.imageHeight))
 
         # Menu bar buttons
         self.menu = Frame(self.root)
@@ -88,7 +95,7 @@ class GaugingGui:
         self.textVar.set("Open image to start parameter gauging.")
 
         # canvas for the image
-        self.canvas = Canvas(self.root, width = 500, height = 500)
+        self.canvas = Canvas(self.root, width = self.imageHeight, height = self.imageHeight)
         self.canvas.pack()
 
         # frame for the scale bars
@@ -145,14 +152,14 @@ class GaugingGui:
             self.filename = filedialog.askopenfilename(initialdir = self.lastdir, title ="Select image!",filetypes = (("png images","*.png") , ("tif images","*.tif"), ("jpeg images","*.jpg")) )
         self.img = Image.open(self.filename)
         if self.img.size[0] == self.img.size[1]:
-            self.resized = self.img.resize((500, 500),Image.ANTIALIAS)
+            self.resized = self.img.resize((self.imageHeight, self.imageHeight),Image.ANTIALIAS)
         else:
             self.max, self.argmax = np.max(self.img.size), np.argmax(self.img.size)
-            self.min = (np.min(self.img.size)*500)/self.max
+            self.min = (np.min(self.img.size)*self.imageHeight)/self.max
             if self.argmax == 0:
-                self.resized = self.img.resize((500,int(self.min)),Image.ANTIALIAS)
+                self.resized = self.img.resize((self.imageHeight,int(self.min)),Image.ANTIALIAS)
             else:
-                self.resized = self.img.resize((int(self.min),500),Image.ANTIALIAS)
+                self.resized = self.img.resize((int(self.min),self.imageHeight),Image.ANTIALIAS)
         self.image = ImageTk.PhotoImage(self.resized)
         self.canvas.create_image(0, 0, anchor=NW, image=self.image)
         if self.filename != "":
@@ -237,15 +244,16 @@ class GaugingGui:
                 fig.savefig(imagePath+'/skeletonOnImage.png', bbox_inches='tight', dpi=300)
                 self.img = Image.open(imagePath+'/skeletonOnImage.png')
 
+            imageHeight = self.height * 0.625
             if self.img.size[0] == self.img.size[1]:
-                self.resized = self.img.resize((500, 500),Image.ANTIALIAS)
+                self.resized = self.img.resize((self.imageHeight, self.imageHeight),Image.ANTIALIAS)
             else:
                 self.max, self.argmax = np.max(self.img.size), np.argmax(self.img.size)
-                self.min = (np.min(self.img.size)*500)/self.max
+                self.min = (np.min(self.img.size)*self.imageHeight)/self.max
                 if self.argmax == 0:
-                    self.resized = self.img.resize((500,int(self.min)),Image.ANTIALIAS)
+                    self.resized = self.img.resize((self.imageHeight,int(self.min)),Image.ANTIALIAS)
                 else:
-                    self.resized = self.img.resize((int(self.min),500),Image.ANTIALIAS)
+                    self.resized = self.img.resize((int(self.min),self.imageHeight),Image.ANTIALIAS)
             self.image = ImageTk.PhotoImage(self.resized)
             self.canvas.create_image(0, 0, anchor=NW, image=self.image)
 
