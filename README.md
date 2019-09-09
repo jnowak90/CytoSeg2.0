@@ -74,7 +74,7 @@ If you selected to do the complete analysis, you will be guided trough different
    Select the name of your output folder and if you want to use already existing masks (applicable if you already ran this part before). You can also select the silent mode here and the different parameters. If you selected parameters before during gauging, the parameters will be selected here automatically. 
   
 ### Output
-The following outputs are generated when using the pre-processing and extraction pipeline:
+The following outputs are generated when using the pre-processing and extraction pipeline (example outputs are shown in the DemoImages folder):
   - **\*\_filter.tif**: pre-processed image
   - **\*\_mask.tif**: mask of ROI for image
   - **originalGraphs.gpickle**: collection of all extracted networks from the input image (one network per image slice)
