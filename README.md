@@ -13,7 +13,6 @@ Fiji Macro and GUI for CytoSeg to automatically extract and analyze the actin cy
  - [Output](#output)
  - [Troubleshooting](#troubleshooting)
 
----
 
 ## Requirements
 
@@ -34,7 +33,6 @@ Fiji Macro and GUI for CytoSeg to automatically extract and analyze the actin cy
   - shapely (*1.5.17*)
   - packaging (*16.8*)
 
----
 
 ## Installation
 
@@ -48,7 +46,6 @@ Fiji Macro and GUI for CytoSeg to automatically extract and analyze the actin cy
 
 5. The macro should be now in Plugins > CytoSeg.
 
----
 
 ## Workflow
 
@@ -87,11 +84,9 @@ If you selected to do the complete analysis, you will be guided trough different
 
    Select the name of your output folder and if you want to use already existing masks (applicable if you already ran this part before). You can also select the silent mode here and change the different parameters. If you selected parameters before during gauging, the parameters will be selected here automatically. 
 
----
 
 ## Demo
 
----
 
 ## Output
 The following outputs are generated when using the pre-processing and extraction pipeline (example outputs are shown in the DemoImages folder):
@@ -105,7 +100,6 @@ The following outputs are generated when using the pre-processing and extraction
   - **originalGraphProperties.csv**: table of graph properties for the original networks 
   - **randomGraphProperties.csv**: table of graph properties for the random networks
 
----
 
 ## Troubleshooting
 In case of errors, here are some suggestions on how to fix them.
