@@ -88,21 +88,21 @@ The following outputs are generated when using the pre-processing and extraction
 ### Troubleshooting
 In case of errors, here are some suggestions on how to fix them.
 
-# The plugin works, but the gauging GUI is not opening and the extraction is not working
+#### The plugin works, but the gauging GUI is not opening and the extraction is not working
 Check if you added the correct Python path when prompted at the beginning. You can test if your python path is working by opening a terminal (Linux, MacOs) or the CMD (Windows) and typing the following:
 ```bash
 YOURPYTHONPATH -c "print('Hello World')"
 ```
 YOURPYTHONPATH is the path you copied into the plugin at the beginning. If you don't get an output (Hello World printed in the terminal/CMD), your python path is wrong.
 
-# StackReg, TurboReg or MultiStackReg raise an error
+#### StackReg, TurboReg or MultiStackReg raise an error
 Check if you correctly installed the plugins. You should find TurboReg and StackReg in the Fiji Plugins Menu. MultiStackReg should be in Plugins > Registration. If you can't find the plugins there, the installation didn't work. To install the plugins correctly, download them from the links in Requirements and decompress. Then go to Fiji > Plugins > Install Plugin... and choose the corresponding .jar file of the plugin. Restart Fiji to see if the plugin was installed.
 
-# All required plugins are installed, but StackReg still raises an error
+#### All required plugins are installed, but StackReg still raises an error
 Try to install StackReg from: https://sites.imagej.net/BIG-EPFL/plugins/
 
-# The gauging GUI opened the image, but nothing happens when moving the sliders
+#### The gauging GUI opened the image, but nothing happens when moving the sliders
 Make sure you created a mask (\*\_mask.tif) for the selected image (\*\_filter.tif) that is in the same folder. If not, you can do so by choosing ""Select specific CytoSeg step" > "Redraw mask".
 
-# The plugin raises an error for the bleach correction (this command requires a stack)
+#### The plugin raises an error for the bleach correction (this command requires a stack)
 The image you selected is not a stack, but a single image. CytoSeg only works with image stacks.
