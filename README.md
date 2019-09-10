@@ -6,12 +6,12 @@ Fiji Macro and GUI for CytoSeg to automatically extract and analyze the actin cy
    *PNAS*, **2017**, 114: E5741-5749.
    
 ## Contents
- - [Requirements] (#requirements)
- - [Installation] (#installation)
- - [Workflow] (#workflow)
- - [Demo] (#demo)
- - [Output] (#output)
- - [Troubleshooting] (#troubleshooting)
+ - [Requirements](#requirements)
+ - [Installation](#installation)
+ - [Workflow](#workflow)
+ - [Demo](#demo)
+ - [Output](#output)
+ - [Troubleshooting](#troubleshooting)
 
 ---
 
