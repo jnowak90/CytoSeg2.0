@@ -4,6 +4,16 @@ Fiji Macro and GUI for CytoSeg to automatically extract and analyze the actin cy
    Breuer, D., Nowak, J., Ivakov, A., Somssich, M., Persson, S. and Nikoloski, Z.
    System-wide organization of actin cytoskeleton determines organelle transport in hypocotyl plant cells.
    *PNAS*, **2017**, 114: E5741-5749.
+   
+## Contents
+ - [Requirements] (#requirements)
+ - [Installation] (#installation)
+ - [Workflow] (#workflow)
+ - [Demo] (#demo)
+ - [Output] (#output)
+ - [Troubleshooting] (#troubleshooting)
+
+---
 
 ### Requirements
 
@@ -24,6 +34,8 @@ Fiji Macro and GUI for CytoSeg to automatically extract and analyze the actin cy
   - shapely (*1.5.17*)
   - packaging (*16.8*)
 
+---
+
 ### Installation
 
 1. Make sure all required Fiji plugins and Python 3 modules are installed (see Requirements).
@@ -35,6 +47,8 @@ Fiji Macro and GUI for CytoSeg to automatically extract and analyze the actin cy
 4. Start Fiji. If Fiji was already open, restart it.
 
 5. The macro should be now in Plugins > CytoSeg.
+
+---
 
 ### Workflow
 
@@ -72,7 +86,13 @@ If you selected to do the complete analysis, you will be guided trough different
 *Pre-processing and extraction:*
 
    Select the name of your output folder and if you want to use already existing masks (applicable if you already ran this part before). You can also select the silent mode here and change the different parameters. If you selected parameters before during gauging, the parameters will be selected here automatically. 
-  
+
+---
+
+### Demo
+
+---
+
 ### Output
 The following outputs are generated when using the pre-processing and extraction pipeline (example outputs are shown in the DemoImages folder):
   - **\*\_filter.tif**: pre-processed image
@@ -84,6 +104,8 @@ The following outputs are generated when using the pre-processing and extraction
   - **ExtractedNetworks.pdf**: plot of the original and randomized extracted network of the first image slice
   - **originalGraphProperties.csv**: table of graph properties for the original networks 
   - **randomGraphProperties.csv**: table of graph properties for the random networks
+
+---
 
 ### Troubleshooting
 In case of errors, here are some suggestions on how to fix them.
