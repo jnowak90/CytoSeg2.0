@@ -70,7 +70,7 @@ class GaugingGui:
             self.filename = filename
         self.pathToPlugin = pathToPlugin
         self.osSystem = osSystem
-        self.past = 1
+        self.past = 0
 
         self.root.title('CytoSeg 2.0 - Gauging')
         if self.root.winfo_screenheight() > 1000:
@@ -80,7 +80,6 @@ class GaugingGui:
             self.width = int(self.height * 0.75)
         self.root.geometry('%dx%d' % (self.width, self.height))
         self.imageHeight = int(self.height * 0.625)
-        print(self.imageHeight, type(self.imageHeight))
 
         # Menu bar buttons
         self.menu = Frame(self.root)
@@ -148,7 +147,7 @@ class GaugingGui:
             self.lastdir = self.pathToPlugin
         else:
             self.lastdir = './'
-        if self.filename == "":
+        if self.filename == "" or self.past == 1:
             self.filename = filedialog.askopenfilename(initialdir = self.lastdir, title ="Select image!",filetypes = (("png images","*.png") , ("tif images","*.tif"), ("jpeg images","*.jpg")) )
         self.img = Image.open(self.filename)
         if self.img.size[0] == self.img.size[1]:
@@ -165,6 +164,7 @@ class GaugingGui:
         if self.filename != "":
             self.lastdir = os.path.dirname(self.filename)
         self.textVar.set("Change segmentation by adjusting parameter controllers.")
+        self.past = 1
 
     # message that pops up when clicking Help
     def helpMessage(self):
@@ -201,18 +201,16 @@ class GaugingGui:
             factr = self.factr.get()-0.1
 
             path = self.filename
-            print("path:", path)
             if self.osSystem == 1:
                 path = path.replace("/", "\\")
-                print("New path:", path)
                 imageName = path.split('\\')[-1].split('.')[0]
+                imageName = imageName.replace("_filter", "")
                 imagePath = '\\'.join(path.split('\\')[:-1])
-                print("imageName:", imageName)
-                print("imagePath:", imagePath)
                 rawImage = skimage.io.imread(self.filename, plugin='tifffile')
                 mask = skimage.io.imread(imagePath+'\\'+imageName+"_mask.tif", plugin='tifffile')>0
             else:
                 imageName = path.split('/')[-1].split('.')[0]
+                imageName = imageName.replace("_filter", "")
                 imagePath = '/'.join(path.split('/')[:-1])
                 rawImage = skimage.io.imread(self.filename, plugin='tifffile')
                 mask = skimage.io.imread(imagePath+'/'+imageName+"_mask.tif", plugin='tifffile')>0
