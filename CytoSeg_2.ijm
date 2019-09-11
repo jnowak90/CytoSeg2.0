@@ -129,6 +129,7 @@ function generateMask(pathToFilter, pathOutputMask){
 	run('Divide...', 'value=' + meanValue);
 	// save mask
 	run('8-bit');
+	pathOutputMask = replace(pathOutputMask, "_filter", "");
 	saveAs('Tiff', pathOutputMask);                                            
 	// close open windows
 	selectWindow('Results');                                
@@ -193,28 +194,29 @@ function pythonGraphAnalysis(pathToPython3, pathToFolder, parameters){
 	}
 }
 // function to check if file is mask
-function checkIfFilter(path){
-	if (endsWith(path, "_filter.tif")){
-		pathMask = replace(path, "filter", "mask");
-		generateMask(path, pathMask);
-	}
-}
+
+//function checkIfFilter(path){
+//	if (endsWith(path, "_filter.tif")){
+//		pathMask = replace(path, "filter", "mask");
+//		generateMask(path, pathMask);
+//	}
+//}
 //recursive function to go through all subfolders
-function checkIfThereAreSubfolders(path){
-	fileList = getFileList(path);
-	for (i=0; i<fileList.length; i++){
-		// if file is a directory
-		if (endsWith(fileList[i], "/") | endsWith(fileList[i], "\\")){
-			path2 = path + fileList[i];
-			checkIfThereAreSubfolders(path2);
-		}
-		// if file is not a directory -> check if it is a mask
-		else{
-			path3 = path + fileList[i];
-			checkIfFilter(path3);
-		}
-	}
-}
+//function checkIfThereAreSubfolders(path){
+//	fileList = getFileList(path);
+//	for (i=0; i<fileList.length; i++){
+//		// if file is a directory
+//		if (endsWith(fileList[i], "/") | endsWith(fileList[i], "\\")){
+//			path2 = path + fileList[i];
+//			checkIfThereAreSubfolders(path2);
+//		}
+//		// if file is not a directory -> check if it is a mask
+//		else{
+//			path3 = path + fileList[i];
+//			checkIfFilter(path3);
+//		}
+//	}
+//}
 //user input for python path
 function selectPythonPath(pathToCytoSeg) {
 	Dialog.create("CytoSeg - Welcome");
@@ -342,17 +344,22 @@ function mainMenu() {
 			print("\n#########################################\n\nCyto Seg is running...\n");
 			for (i=0; i<imageList.length; i++) {
 				if(endsWith(imageList[i],"tif") || endsWith(imageList[i], "TIF") || endsWith(imageList[i], "tiff") || endsWith(imageList[i], "TIFF")){
-					pathOutputImages = createOutputFolder(pathToImageFolder + imageList[i], outputFolder);
-					print("\nFinshed pre-processing of image " + i + 1 + " of " + imageList.length + "...\n");
-					filename = replaceFileFormat(imageList[i]);
-					preprocessImage(filename, pathOutputImages);
-					if (startsWith(osSystem, "Windows")) {
-						generateMask(imageList[i], pathOutputImages + "\\" + filename + "_mask.tif");
+					if(endsWith(imageList[i],"_mask.tif") || endsWith(imageList[i], "_mask.TIF") || endsWith(imageList[i], "_mask.tiff") || endsWith(imageList[i], "_mask.TIFF")){
+						print("A mask image was skipped.");
+						counter += 1;
 					} else {
-						generateMask(imageList[i], pathOutputImages + "/" + filename + "_mask.tif");
+						pathOutputImages = createOutputFolder(pathToImageFolder + imageList[i], outputFolder);
+						print("\nFinshed pre-processing of image " + i + 1 + " of " + imageList.length + "...\n");
+						filename = replaceFileFormat(imageList[i]);
+						preprocessImage(filename, pathOutputImages);
+						if (startsWith(osSystem, "Windows")) {
+							generateMask(imageList[i], pathOutputImages + "\\" + filename + "_mask.tif");
+						} else {
+							generateMask(imageList[i], pathOutputImages + "/" + filename + "_mask.tif");
+						}
+						array = newArray(pathOutputImages);
+						extractionArray = Array.concat(extractionArray, array);
 					}
-					array = newArray(pathOutputImages);
-					extractionArray = Array.concat(extractionArray, array);
 				}
 				else {					
 					print("A file that is not a .tif file was skipped.");
@@ -404,17 +411,21 @@ function mainMenu() {
 			}
 			else {
 				pathToImageFolder = getDirectory("Choose a Directory");
-				checkIfThereAreSubfolders(pathToImageFolder);
+				//checkIfThereAreSubfolders(pathToImageFolder);
 				imageList = getFileList(pathToImageFolder);
 				for (i=0; i<imageList.length; i++) {
 					if(endsWith(imageList[i],"tif") || endsWith(imageList[i], "TIF") || endsWith(imageList[i], "tiff") || endsWith(imageList[i], "TIFF")){
-						open(imageList[i]);
-						filename = getTitle();
-						newFilename = replaceFileFormat(filename);
-						if (startsWith(osSystem, "Windows")) {
-							generateMask(filename, pathToImageFolder + "\\" + newFilename + "_mask.tif");
+						if(endsWith(imageList[i],"_mask.tif") || endsWith(imageList[i], "_mask.TIF") || endsWith(imageList[i], "_mask.tiff") || endsWith(imageList[i], "_mask.TIFF")){
+							print("A mask image was skipped.");
 						} else {
-							generateMask(filename, pathToImageFolder + "/" + newFilename + "_mask.tif");
+							open(imageList[i]);
+							filename = getTitle();
+							newFilename = replaceFileFormat(filename);
+							if (startsWith(osSystem, "Windows")) {
+								generateMask(filename, pathToImageFolder + "\\" + newFilename + "_mask.tif");
+							} else {
+								generateMask(filename, pathToImageFolder + "/" + newFilename + "_mask.tif");
+							}
 						}
 					}
 				}
