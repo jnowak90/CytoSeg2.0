@@ -95,6 +95,7 @@ The following outputs are generated when using the pre-processing and extraction
   - **ExtractedNetworks.pdf**: plot of the original and randomized extracted network of the first image slice
   - **originalGraphProperties.csv**: table of graph properties for the original networks 
   - **randomGraphProperties.csv**: table of graph properties for the random networks
+  - **skeletonOnImage.png**: image of resulting segmentation from chosen gauging parameters
 
 ## Demo
 The DemoImages folder contains example image that can be used to test the plugin. 
