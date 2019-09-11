@@ -193,30 +193,7 @@ function pythonGraphAnalysis(pathToPython3, pathToFolder, parameters){
 		exec('sh', pathToPlugin, pathToPython3, pathToPostprocessing, pathToFolder ,parameters, "0");
 	}
 }
-// function to check if file is mask
 
-//function checkIfFilter(path){
-//	if (endsWith(path, "_filter.tif")){
-//		pathMask = replace(path, "filter", "mask");
-//		generateMask(path, pathMask);
-//	}
-//}
-//recursive function to go through all subfolders
-//function checkIfThereAreSubfolders(path){
-//	fileList = getFileList(path);
-//	for (i=0; i<fileList.length; i++){
-//		// if file is a directory
-//		if (endsWith(fileList[i], "/") | endsWith(fileList[i], "\\")){
-//			path2 = path + fileList[i];
-//			checkIfThereAreSubfolders(path2);
-//		}
-//		// if file is not a directory -> check if it is a mask
-//		else{
-//			path3 = path + fileList[i];
-//			checkIfFilter(path3);
-//		}
-//	}
-//}
 //user input for python path
 function selectPythonPath(pathToCytoSeg) {
 	Dialog.create("CytoSeg - Welcome");
@@ -411,7 +388,6 @@ function mainMenu() {
 			}
 			else {
 				pathToImageFolder = getDirectory("Choose a Directory");
-				//checkIfThereAreSubfolders(pathToImageFolder);
 				imageList = getFileList(pathToImageFolder);
 				for (i=0; i<imageList.length; i++) {
 					if(endsWith(imageList[i],"tif") || endsWith(imageList[i], "TIF") || endsWith(imageList[i], "tiff") || endsWith(imageList[i], "TIFF")){
