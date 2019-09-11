@@ -9,8 +9,8 @@ Fiji Macro and GUI for CytoSeg to automatically extract and analyze the actin cy
  - [Requirements](#requirements)
  - [Installation](#installation)
  - [Workflow](#workflow)
- - [Demo](#demo)
  - [Output](#output)
+ - [Demo](#demo)
  - [Troubleshooting](#troubleshooting)
 
 
@@ -84,10 +84,6 @@ If you selected to do the complete analysis, you will be guided trough different
 
    Select the name of your output folder and if you want to use already existing masks (applicable if you already ran this part before). You can also select the silent mode here and change the different parameters. If you selected parameters before during gauging, the parameters will be selected here automatically. 
 
-
-## Demo
-
-
 ## Output
 The following outputs are generated when using the pre-processing and extraction pipeline (example outputs are shown in the DemoImages folder):
   - **\*\_filter.tif**: pre-processed image
@@ -100,6 +96,37 @@ The following outputs are generated when using the pre-processing and extraction
   - **originalGraphProperties.csv**: table of graph properties for the original networks 
   - **randomGraphProperties.csv**: table of graph properties for the random networks
 
+## Demo
+The DemoImages folder contains example image that can be used to test the plugin. 
+The Extraction folder contains two .tif images of actin filaments under control and LatB treatment. The images can be used for the complete analysis, as well as for the mask redrawing and the pre-processing and extraction.
+The Gauging folder contains a .tif image of the actin cytoskeleton and a mask for the ROI. The images can be used for the gauging and all the steps mentioned above.
+The ExampleOutput folder contains the expected output after extraction the networks as described in Output. The output can be further analyzed in Python 3, as shown in the following.
+
+```python
+import numpy as np
+import pandas as pd
+import networkx as nx
+import pickle
+import matplotlib.pyplot as plt
+
+# import the extracted networks
+originalGraphs = pickle.load(open('originalGraphs.gpickle', 'rb'))
+
+# import node positions of networks
+originalPositions = np.load('originalGraphPositions.npy')
+
+# plot first graph 
+graph1, pos1 = originalGraphs[0], originalPositions[0]
+edgeCapacity = 1.0 * np.array([d['capa'] for u,v,d in graph1.edges(data=True)])
+
+fig, ax = plt.subplots(1, 1, figsize=(3,3))
+nx.draw_networkx(graph1, pos1[:, :2], with_labels=False, node_size=0, edge_color=plt.cm.plasma(edgeCapacity/ edgeCapacity.max()))
+plt.show()
+
+# import network property table
+properties = pd.read_csv('originalGraphProperties.csv', sep=';')
+properties.head()
+```
 
 ## Troubleshooting
 In case of errors, here are some suggestions on how to fix them.
