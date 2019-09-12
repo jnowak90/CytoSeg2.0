@@ -76,10 +76,10 @@ class GaugingGui:
         if self.root.winfo_screenheight() > 1000:
             self.height, self.width = 800, 600
         else:
-            self.height = int(self.root.winfo_screenheight() * 0.9)
+            self.height = int(self.root.winfo_screenheight() * 0.875)
             self.width = int(self.height * 0.75)
         self.root.geometry('%dx%d' % (self.width, self.height))
-        self.imageHeight = int(self.height * 0.625)
+        self.imageHeight = int(self.height * 0.55)
 
         # Menu bar buttons
         self.menu = Frame(self.root)
@@ -100,25 +100,25 @@ class GaugingGui:
         # frame for the scale bars
         self.frame = Frame(self.root)
         self.LabelSigma = Label(self.frame,text="v_width")
-        self.sigma = Scale(self.frame, from_=0.4, to=2.2, resolution=0.2, orient=HORIZONTAL,length=450, command=self.showValueSigma, showvalue=0)
+        self.sigma = Scale(self.frame, from_=0.4, to=2.2, resolution=0.2, orient=HORIZONTAL,length=self.imageHeight, command=self.showValueSigma, showvalue=0)
         self.sigma.set(2.0)
         self.LabelSigmaValue = Label(self.frame, text="")
         self.sigma.bind("<ButtonRelease-1>", self.displaySkeleton)
 
         self.LabelBlock = Label(self.frame,text="v_thres")
-        self.block = Scale(self.frame, from_=20, to=112, resolution=10.0, orient=HORIZONTAL,length=450, command=self.showValueBlock, showvalue=0)
+        self.block = Scale(self.frame, from_=20, to=112, resolution=10.0, orient=HORIZONTAL,length=self.imageHeight, command=self.showValueBlock, showvalue=0)
         self.block.set(101.0)
         self.LabelBlockValue = Label(self.frame, text="")
         self.block.bind("<ButtonRelease-1>", self.displaySkeleton)
 
         self.LabelSmall = Label(self.frame,text="v_size")
-        self.small = Scale(self.frame, from_=2.0, to=47.0, resolution=5.0, orient=HORIZONTAL,length=450, command=self.showValueSmall, showvalue=0)
+        self.small = Scale(self.frame, from_=2.0, to=47.0, resolution=5.0, orient=HORIZONTAL,length=self.imageHeight, command=self.showValueSmall, showvalue=0)
         self.small.set(27.0)
         self.LabelSmallValue = Label(self.frame, text="")
         self.small.bind("<ButtonRelease-1>", self.displaySkeleton)
 
         self.LabelFactr = Label(self.frame,text="v_int")
-        self.factr = Scale(self.frame, from_=0.1, to=2.0, resolution=0.2, orient=HORIZONTAL,length=450, command=self.showValueFactr, showvalue=0)
+        self.factr = Scale(self.frame, from_=0.1, to=2.0, resolution=0.2, orient=HORIZONTAL,length=self.imageHeight, command=self.showValueFactr, showvalue=0)
         self.factr.set(0.5)
         self.LabelFactrValue = Label(self.frame,text="")
         self.factr.bind("<ButtonRelease-1>", self.displaySkeleton)
