@@ -47,17 +47,29 @@ function createParameterDialog(){
 	Dialog.addMessage("");
 	Dialog.addMessage("Do you want to proceed in silent mode?");
 	Dialog.addChoice("Choose", items, "yes");
+	Dialog.addMessage("");
+	Dialog.addMessage("Parameters");
 	Dialog.addNumber("rolling ball", roll);
 	Dialog.addMessage("");
 	//Dialog.addNumber("depth", depth);
 	//Dialog.addMessage("");
-	Dialog.addNumber("sigma", sigma);
+	Dialog.addNumber("Vwidth", sigma);
 	Dialog.addMessage("");
-	Dialog.addNumber("block size", block);
+	Dialog.addNumber("Vthres", block);
 	Dialog.addMessage("");
-	Dialog.addNumber("component size", small);
+	Dialog.addNumber("Vsize", small);
 	Dialog.addMessage("");
-	Dialog.addNumber("average intensity", factr);
+	Dialog.addNumber("Vint", factr);
+	 html = "<html>"
+    +"<h2>Parameter information</h2>"
+    +"<p><b>masks</b>: if you want to reuse already created mask, choose <b color='red'>yes</b>.</p>"
+    +"<p><b>silent mode</b>: if you choose <b color='red'>yes</b>, all processes will be run in the background.</p>"
+    +"<p><b>rolling ball</b>: rolling ball size in pixel for background subtraction.</p>"
+    +"<p><b>v<sub>width</sub></b>: width of filamentous structures to enhance with a 2D tubeness filter.</p>"
+    +"<p><b>v<sub>thres</sub></b>: block size for adaptive median threshold.</p>"
+    +"<p><b>v<sub>size</sub></b>: size of small objects to be removed.</p>"
+    +"<p><b>v<sub>int</sub></b>: lowest average intensity of a filament.</p>";
+	Dialog.addHelp(html);
 	Dialog.show();
 	//return outputName;
 	}
@@ -573,8 +585,14 @@ function mainMenu() {
 		//run("Close");
 	}
 	Dialog.create("Goodbye");
-	Dialog.addMessage("CytoSeg Analysis finished");
+	Dialog.addMessage("CytoSeg Analysis is finished.");
+	items = newArray("continue","quit");
+	Dialog.addChoice("Do you want to continue or quit the application?", items, "quit");
 	Dialog.show();
+	choiceApplication = Dialog.getChoice();
+	if (choiceApplication == "continue") {
+		mainMenu();
+	}
 }
 //// MENU: calling MainMenu
 mainMenu();
