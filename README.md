@@ -150,3 +150,6 @@ Make sure you created a mask (\*\_mask.tif) for the selected image (\*\_filter.t
 
 ### The plugin raises an error for the bleach correction (this command requires a stack)
 The image you selected is not a stack, but a single image. CytoSeg only works with image stacks.
+
+### The plugin raises an error: java.io.FileNotFoundException (Mac OS)
+Move the Fiji application into the Applications folder.
