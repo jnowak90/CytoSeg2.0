@@ -168,7 +168,7 @@ class GaugingGui:
 
     # message that pops up when clicking Help
     def helpMessage(self):
-        messagebox.showinfo("Parameter information","v_width: width of filamentous structures to enhance with a 2D tubeness filter,\n\nv_thres: block size for adaptive median threshold,\n\nv_size: size of small objects to be removed,\n\nv_int: lowest average intensity of a component")
+        messagebox.showinfo("Parameter information","v_width: width of filamentous structures to enhance with a 2D tubeness filter,\n\nv_thres: block size for adaptive median threshold,\n\nv_size: size of small objects to be removed,\n\nv_int: lowest average intensity of a filament.")
 
 
     # have to cheat here, scale bar is not showing the intervals for block, small and factr as it should...
