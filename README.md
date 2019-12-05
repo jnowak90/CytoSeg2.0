@@ -32,7 +32,7 @@ Fiji Macro and GUI for CytoSeg to automatically extract and analyze the actin cy
   - pandas (*0.20.3*)
   - shapely (*1.5.17*)
   - packaging (*16.8*)
-
+  - tkinter (*8.5*)
 
 ## Installation
 
