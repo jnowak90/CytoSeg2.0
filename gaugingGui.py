@@ -7,8 +7,9 @@ import os
 import sys
 import numpy as np
 import scipy as sp
+from scipy import ndimage
 import skimage
-from skimage import feature
+from skimage import feature, morphology, filters, io, color
 import matplotlib
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
@@ -20,7 +21,7 @@ def skeletonize_graph(gaussianImage, mask, sigma, block, small, factr):
     tubeImage = tube_filter(gaussianImage, sigma)
     threshold = skimage.filters.threshold_local(tubeImage, block)
     binaryImage = tubeImage > threshold
-    skeletonImage = skimage.morphology.skeletonize_3d(binaryImage > 0)
+    skeletonImage = skimage.morphology.skeletonize(binaryImage > 0)
     ones = np.ones((3, 3))
     cleanedImage = skimage.morphology.remove_small_objects(skeletonImage, small, connectivity=2) > 0
     cleanedImage = cleanedImage * mask
@@ -62,7 +63,7 @@ depth = 7.75
 
 class GaugingGui:
 
-    def __init__(self,root, filename, pathToPlugin, osSystem):
+    def __init__(self, root, filename, pathToPlugin, osSystem):
         self.root = root
         if filename == 'None':
             self.filename = ""
@@ -99,26 +100,26 @@ class GaugingGui:
 
         # frame for the scale bars
         self.frame = Frame(self.root)
-        self.LabelSigma = Label(self.frame,text="v_width")
-        self.sigma = Scale(self.frame, from_=0.4, to=2.2, resolution=0.2, orient=HORIZONTAL,length=self.imageHeight, command=self.showValueSigma, showvalue=0)
+        self.LabelSigma = Label(self.frame, text="v_width")
+        self.sigma = Scale(self.frame, from_=0.4, to=2.2, resolution=0.2, orient=HORIZONTAL, length=self.imageHeight, command=self.showValueSigma, showvalue=0)
         self.sigma.set(2.0)
         self.LabelSigmaValue = Label(self.frame, text="")
         self.sigma.bind("<ButtonRelease-1>", self.displaySkeleton)
 
         self.LabelBlock = Label(self.frame,text="v_thres")
-        self.block = Scale(self.frame, from_=20, to=112, resolution=10.0, orient=HORIZONTAL,length=self.imageHeight, command=self.showValueBlock, showvalue=0)
+        self.block = Scale(self.frame, from_=20, to=112, resolution=10.0, orient=HORIZONTAL, length=self.imageHeight, command=self.showValueBlock, showvalue=0)
         self.block.set(101.0)
         self.LabelBlockValue = Label(self.frame, text="")
         self.block.bind("<ButtonRelease-1>", self.displaySkeleton)
 
         self.LabelSmall = Label(self.frame,text="v_size")
-        self.small = Scale(self.frame, from_=2.0, to=47.0, resolution=5.0, orient=HORIZONTAL,length=self.imageHeight, command=self.showValueSmall, showvalue=0)
+        self.small = Scale(self.frame, from_=2.0, to=47.0, resolution=5.0, orient=HORIZONTAL, length=self.imageHeight, command=self.showValueSmall, showvalue=0)
         self.small.set(27.0)
         self.LabelSmallValue = Label(self.frame, text="")
         self.small.bind("<ButtonRelease-1>", self.displaySkeleton)
 
         self.LabelFactr = Label(self.frame,text="v_int")
-        self.factr = Scale(self.frame, from_=0.1, to=2.0, resolution=0.2, orient=HORIZONTAL,length=self.imageHeight, command=self.showValueFactr, showvalue=0)
+        self.factr = Scale(self.frame, from_=0.1, to=2.0, resolution=0.2, orient=HORIZONTAL, length=self.imageHeight, command=self.showValueFactr, showvalue=0)
         self.factr.set(0.5)
         self.LabelFactrValue = Label(self.frame,text="")
         self.factr.bind("<ButtonRelease-1>", self.displaySkeleton)
@@ -136,10 +137,10 @@ class GaugingGui:
         self.factr.grid(row=3,column=4, pady=10)
         self.LabelFactrValue.grid(row=3, column=20, sticky=E, pady=10)
 
-        self.frame.pack(side=TOP,padx=10,pady=5)
+        self.frame.pack(side=TOP, padx=10, pady=5)
 
         # button to submit parameters
-        self.Final = Button(self.root,text='Choose Parameters',command=self.get_parameters).pack(anchor=CENTER)
+        self.Final = Button(self.root, text='Choose Parameters', command = self.get_parameters).pack(anchor=CENTER)
 
     # select image and open in canvas
     def openImage(self):
@@ -147,24 +148,28 @@ class GaugingGui:
             self.lastdir = self.pathToPlugin
         else:
             self.lastdir = './'
-        if self.filename == "" or self.past == 1:
+        if self.past == 1:
             self.filename = filedialog.askopenfilename(initialdir = self.lastdir, title ="Select image!",filetypes = (("png images","*.png") , ("tif images","*.tif"), ("jpeg images","*.jpg")) )
-        self.img = Image.open(self.filename)
-        if self.img.size[0] == self.img.size[1]:
-            self.resized = self.img.resize((self.imageHeight, self.imageHeight),Image.ANTIALIAS)
+            self.displaySkeleton(self.past)
         else:
-            self.max, self.argmax = np.max(self.img.size), np.argmax(self.img.size)
-            self.min = (np.min(self.img.size)*self.imageHeight)/self.max
-            if self.argmax == 0:
-                self.resized = self.img.resize((self.imageHeight,int(self.min)),Image.ANTIALIAS)
+            if self.filename == "":
+                self.filename = filedialog.askopenfilename(initialdir = self.lastdir, title ="Select image!",filetypes = (("png images","*.png") , ("tif images","*.tif"), ("jpeg images","*.jpg")) )
+            self.img = Image.open(self.filename)
+            if self.img.size[0] == self.img.size[1]:
+                self.resized = self.img.resize((self.imageHeight, self.imageHeight),Image.ANTIALIAS)
             else:
-                self.resized = self.img.resize((int(self.min),self.imageHeight),Image.ANTIALIAS)
-        self.image = ImageTk.PhotoImage(self.resized)
-        self.canvas.create_image(0, 0, anchor=NW, image=self.image)
-        if self.filename != "":
-            self.lastdir = os.path.dirname(self.filename)
-        self.textVar.set("Change segmentation by adjusting parameter controllers.")
-        self.past = 1
+                self.max, self.argmax = np.max(self.img.size), np.argmax(self.img.size)
+                self.min = (np.min(self.img.size) * self.imageHeight) / self.max
+                if self.argmax == 0:
+                    self.resized = self.img.resize((self.imageHeight, int(self.min)), Image.ANTIALIAS)
+                else:
+                    self.resized = self.img.resize((int(self.min), self.imageHeight), Image.ANTIALIAS)
+            self.image = ImageTk.PhotoImage(self.resized)
+            self.canvas.create_image(0, 0, anchor=NW, image=self.image)
+            if self.filename != "":
+                self.lastdir = os.path.dirname(self.filename)
+            self.textVar.set("Change segmentation by adjusting parameter controllers.")
+            self.past = 1
 
     # message that pops up when clicking Help
     def helpMessage(self):
@@ -175,30 +180,30 @@ class GaugingGui:
     def showValueSigma(self,ev):
         self.LabelSigmaValue.configure(text=ev)
     def showValueBlock(self,ev):
-        number = int(ev)+1
+        number = int(ev) + 1
         self.LabelBlockValue.configure(text=number)
     def showValueSmall(self,ev):
-        number = int(ev)+2
+        number = int(ev) + 2
         self.LabelSmallValue.configure(text=number)
     def showValueFactr(self,ev):
-        number = format(float(ev)-0.1,".1f")
+        number = format(float(ev) - 0.1, ".1f")
         self.LabelFactrValue.configure(text=number)
 
     # save the selected parameters in a file
     def get_parameters(self):
-        params = "" + str(roll) + ","+ str(randw) + "," + str(randn) + "," + str(depth) + "," + str(self.sigma.get()) + "," + str(self.block.get()+1) + "," + str(self.small.get()+2) + "," + str(format(float(self.factr.get())-0.1,".1f"))
+        params = "" + str(roll) + "," + str(randw) + "," + str(randn) + "," + str(depth) + "," + str(self.sigma.get()) + "," + str(self.block.get()+1) + "," + str(self.small.get()+2) + "," + str(format(float(self.factr.get()) - 0.1, ".1f"))
         if self.osSystem == 1:
-            np.savetxt(self.pathToPlugin+"\\defaultParameter.txt",[params],fmt='%s')
+            np.savetxt(self.pathToPlugin + "\\defaultParameter.txt", [params], fmt='%s')
         else:
-            np.savetxt(self.pathToPlugin+"/defaultParameter.txt",[params],fmt='%s')
+            np.savetxt(self.pathToPlugin + "/defaultParameter.txt", [params], fmt='%s')
 
     def displaySkeleton(self,ev):
         self.textVar.set("If you are satisfied with the segmentation, press 'Choose Parameters' to save\n the parameters for the CytoSeg analysis and go back to the main menu.")
-        if self.filename!="":
+        if self.filename != "":
             sigma = self.sigma.get()
-            block = self.block.get()+1
-            small = self.small.get()+2
-            factr = self.factr.get()-0.1
+            block = self.block.get() + 1
+            small = self.small.get() + 2
+            factr = self.factr.get() - 0.1
 
             path = self.filename
             if self.osSystem == 1:
@@ -207,19 +212,19 @@ class GaugingGui:
                 imageName = imageName.replace("_filter", "")
                 imagePath = '\\'.join(path.split('\\')[:-1])
                 rawImage = skimage.io.imread(self.filename, plugin='tifffile')
-                mask = skimage.io.imread(imagePath+'\\'+imageName+"_mask.tif", plugin='tifffile')>0
+                mask = skimage.io.imread(imagePath + '\\' + imageName + "_mask.tif", plugin='tifffile')>0
             else:
                 imageName = path.split('/')[-1].split('.')[0]
                 imageName = imageName.replace("_filter", "")
                 imagePath = '/'.join(path.split('/')[:-1])
                 rawImage = skimage.io.imread(self.filename, plugin='tifffile')
-                mask = skimage.io.imread(imagePath+'/'+imageName+"_mask.tif", plugin='tifffile')>0
+                mask = skimage.io.imread(imagePath + '/' + imageName + "_mask.tif", plugin='tifffile')>0
 
             shape = rawImage.shape
             if len(shape) == 2: #grayscale single image
                 firstImage = rawImage.copy()
             elif len(shape) == 3:
-                if shape[2] in [3,4]: #rgb single image
+                if shape[2] in [3, 4]: #rgb single image
                     grayscaleImage = skimage.color.rgb2gray(rawImage)
                     firstImage = grayscaleImage.copy()
                 else: #grayscale image stack
@@ -230,28 +235,36 @@ class GaugingGui:
             gaussianImage = skimage.filters.gaussian(firstImage, sigma)
             skeletonImage = skeletonize_graph(gaussianImage, mask, sigma, block, small, factr)
 
-            fig = plt.figure()
+            fig, ax = plt.subplots(1, 1)
             plt.imshow(firstImage, cmap='gray_r')
             binarySkeletonImage = np.ma.masked_where(skeletonImage == 0, skeletonImage)
             plt.imshow(binarySkeletonImage, cmap='autumn')
             plt.axis('off')
+            textstr = '\n'.join((
+            r'$v_{width}=%.2f$' % (sigma, ),
+            r'$v_{thres}=%.2f$' % (block, ),
+            r'$v_{size}=%.2f$' % (small, ),
+            r'$v_{int}=%.2f$' % (factr), ))
+            props = dict(boxstyle='round', facecolor='lightgray', alpha=0.5)
+            ax.text(0, 1, textstr, transform=ax.transAxes, fontsize=7, verticalalignment='top', bbox=props)
+
             if self.osSystem == 1:
-                fig.savefig(imagePath+'\\skeletonOnImage.png', bbox_inches='tight', dpi=300)
-                self.img = Image.open(imagePath+'\\skeletonOnImage.png')
+                fig.savefig(imagePath + '\\skeletonOnImage.png', bbox_inches='tight', dpi=300)
+                self.img = Image.open(imagePath + '\\skeletonOnImage.png')
             else:
-                fig.savefig(imagePath+'/skeletonOnImage.png', bbox_inches='tight', dpi=300)
-                self.img = Image.open(imagePath+'/skeletonOnImage.png')
+                fig.savefig(imagePath + '/skeletonOnImage.png', bbox_inches='tight', dpi=300)
+                self.img = Image.open(imagePath + '/skeletonOnImage.png')
 
             imageHeight = self.height * 0.625
             if self.img.size[0] == self.img.size[1]:
-                self.resized = self.img.resize((self.imageHeight, self.imageHeight),Image.ANTIALIAS)
+                self.resized = self.img.resize((self.imageHeight, self.imageHeight), Image.ANTIALIAS)
             else:
                 self.max, self.argmax = np.max(self.img.size), np.argmax(self.img.size)
-                self.min = (np.min(self.img.size)*self.imageHeight)/self.max
+                self.min = (np.min(self.img.size) * self.imageHeight)/self.max
                 if self.argmax == 0:
-                    self.resized = self.img.resize((self.imageHeight,int(self.min)),Image.ANTIALIAS)
+                    self.resized = self.img.resize((self.imageHeight, int(self.min)), Image.ANTIALIAS)
                 else:
-                    self.resized = self.img.resize((int(self.min),self.imageHeight),Image.ANTIALIAS)
+                    self.resized = self.img.resize((int(self.min), self.imageHeight), Image.ANTIALIAS)
             self.image = ImageTk.PhotoImage(self.resized)
             self.canvas.create_image(0, 0, anchor=NW, image=self.image)
 
