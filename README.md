@@ -21,7 +21,6 @@ Fiji Macro and GUI for CytoSeg to automatically extract and analyze the actin cy
 - The following plugins have to be installed in Fiji (in the mentioned order):
   - TurboReg (http://bigwww.epfl.ch/thevenaz/turboreg/)
   - StackReg (http://bigwww.epfl.ch/thevenaz/stackreg/)
-  - MultiStackReg (http://bradbusse.net/sciencedownloads.html)
 - An installation of Python 3 is required. Following modules have to be installed (used versions during development in *brackets*):
   - numpy (*1.14.0*)
   - scipy (*1.2.1*)
