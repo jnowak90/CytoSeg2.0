@@ -8,6 +8,49 @@ osSystem = getInfo("os.name");
 
 /////////////////////
 ///// FUNCTIONS /////
+// test if all neccessary Fiji plugins are installed
+function systemTestFiji() {
+	counter = 0;
+	functions = newArray("StackReg ", "Bleach Correction", "TurboReg ", "8-bit", "Properties...", "Z Project...", 
+	"Clear Outside", "Fill", "Measure", "Divide...", "Subtract Background...", "Despeckle", "Enhance Contrast...");
+
+	List.setCommands;
+	for (i=0; i<functions.length; i++) {
+    	if (List.get(functions[i])!="") {
+    		counter += 0;
+        } else {
+        	print('"' + functions[i] + '"' + ' command was not found. Please install the plugin before continuing.');
+    		counter += 1;
+    			    }
+	}
+
+	if (counter==0) {
+		print("### All necessary Fiji functions were found.");
+	}
+}
+
+// test Python 3 path and if all necessary Python modules are installed
+function systemTestPython(osSystem, pathToPython3, pathToCytoSeg) {
+	if (startsWith(osSystem, "Windows")) {
+		pathToTestArray = getDirectory('plugins') + "CytoSeg\\TestArray.npy";
+		pathToTest = getDirectory("plugins") + "CytoSeg\\SystemTest.py";
+		exec("cmd /c " + pathToPython3 + " " + pathToTest + " " + pathToTestArray);
+	
+	} else {
+		pathToTestArray = getDirectory('plugins') + "CytoSeg/TestArray.npy";
+		pathToTest = getDirectory("plugins") + "CytoSeg/SystemTest.py";
+		exec(pathToPython3, pathToTest, pathToTestArray);
+	}
+
+	if 	(File.exists(pathToTestArray)){
+		ok = File.delete(pathToTestArray);
+	} else {
+		print("No working Pyhton 3 version was found. Please check your Python 3 path.");
+		pathToPython3 = selectPythonPath(pathToCytoSeg);
+		systemTestPython(osSystem, pathToPython3, pathToCytoSeg);
+	}
+}
+
 // find minimum
 function min(x, y) {
 	if (x < y) {
@@ -223,8 +266,7 @@ function selectPythonPath(pathToCytoSeg) {
 /////////////////////
 ///// VARIABLES /////
 getDateAndTime(year, month, dayOfWeek, dayOfMonth, hour, minute, second, msec);
-var month = month+1;    			// bug of the getDateAndTime function, month start with 0
-// path to the file which contains default parameters, reload them for the next run
+var month = month + 1;    			// bug of the getDateAndTime function, month start with 0
 var roll = 50;
 var randw = 1;
 var randn = 1;
@@ -254,6 +296,8 @@ if (startsWith(osSystem, "Windows")) {
 }
 if (!(File.exists(pathToPython3TXT))) {
 	pathToPython3 = selectPythonPath(pathToCytoSeg);
+	systemTestFiji();
+	systemTestPython(osSystem, pathToPython3, pathToCytoSeg);
 } else {
 	pathToPython3 = File.openAsString(pathToPython3TXT);
 }
@@ -300,6 +344,7 @@ function mainMenu() {
 		}
 		updateParameters();
 		parameters = "" + randw + "," + randn + "," + depth + "," + sigma + "," + block + "," + small + "," + factr;
+		print("Used parameters for network extraction: \nv_width: " + sigma + "\nv_thres: " + block + "\nv_size: " + small + "\nv_int: " + factr);
 		Dialog.create("CytoSeg - Settings");
 		Dialog.addMessage("Do you want to process a single image or all images in a folder ?");
 		items = newArray("single","all");
@@ -427,6 +472,7 @@ function mainMenu() {
 			} else {
 				exec('sh', pathToBridge, pathToPython3, pathToGUI, "None", "0");
 			}
+			updateParameters();
 			mainMenu();
 		}
 
@@ -575,6 +621,7 @@ function mainMenu() {
 	// MODE: reset Python 3 path
 	if(choiceMenu == "Reset Python 3 path"){
 		pathToPython3 = selectPythonPath(pathToCytoSeg);
+		systemTestPython(osSystem, pathToPython3, pathToCytoSeg);
 		mainMenu();
 	}
 	if (isOpen("Log")) {
