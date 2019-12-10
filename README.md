@@ -139,7 +139,7 @@ YOURPYTHONPATH -c "print('Hello World')"
 ```
 YOURPYTHONPATH is the path you copied into the plugin at the beginning. If you don't get an output (Hello World printed in the terminal/CMD), your python path is wrong.
 
-### StackReg, TurboReg or MultiStackReg raise an error
+### StackReg or TurboReg raise an error
 Check if you correctly installed the plugins. You should find TurboReg and StackReg in the Fiji Plugins Menu. MultiStackReg should be in Plugins > Registration. If you can't find the plugins there, the installation didn't work. To install the plugins correctly, download them from the links in Requirements and decompress. Then go to Fiji > Plugins > Install Plugin... and choose the corresponding .jar file of the plugin. Restart Fiji to see if the plugin was installed.
 
 ### All required plugins are installed, but StackReg still raises an error
