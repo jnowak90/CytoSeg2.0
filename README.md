@@ -49,21 +49,22 @@ Fiji Macro and GUI for CytoSeg to automatically extract and analyze the actin cy
 ## Workflow
 
 ### Getting started 
-When you first start the plugin, it will prompt you to input the path to your Python 3 (Fiji will otherwise use the system  version of Python 2). You can find the Python 3 path by typing "which python3" in your terminal (Mac OS, Linux). If you use Windows search for python.exe with the Search button and open and copy the file location. Press "OK" to continue. Your Python 3 path will be saved for future sessions. You can change it by selecting "Reset Python3 path" in the CytoSeg2.0 main menu.
+When you first start the plugin, it will prompt you to input the path to your Python 3 (Fiji will otherwise use the system  version of Python 2). You can find the Python 3 path by typing "which python3" in your terminal (Mac OS, Linux). If you use Windows search for python.exe with the Search button and open and copy the file location. Press "OK" to continue. Your Python 3 path will be saved for future sessions. You can change it by selecting "Reset Python3 path" in the CytoSeg2.0 main menu. After you input the Python path, the plugin will check if all necessary Fiji plugins and Python modules are installed.
 
 ### Analysis 
 You can choose whether to do a complete CytoSeg analysis or a specific step in the analysis.
 
 #### Complete Analysis
 If you selected to do the complete analysis, you will be guided trough different steps:
-  
-*Gauging:*
-
-   The GUI will prompt you to select an image for parameter gauging. In the gauging step, the optimal parameters for the segmentation of the cytoskeleton are determined. Press "OK" to select your image for the gauging. You have to select the region of interest (ROI) by drawing your selection as often as you like. Press "OK" when you are done. The gauging window will appear. Press "Open Image" to see your selected image. Drag the parameter sliders (sigma, block, small, factr) to see the segmentation results (that might take some seconds). If you are satisfied with the segmentation, press "Choose Parameters" and your chosen parameters will be saved for the extraction process. Click "Back to Main Menu" to continue.
       
 *Pre-processing:*
 
-   Select a name for the output folder, the current date will be suggested otherwise for the output folder. You can also decide whether to continue in silent mode, which will repress the intermediate pre-processing steps. In the next window you can decide if you want to analyse a single image or multiple images, which you have to select afterwards. Fiji will start pre-processing and you have to select the ROI for all images you selected. The pre-processed image and the mask with the selected ROI will be saved in the output folder (as '\*\_filter.tif' and '\*\_mask.tif', respectively, see Output).
+   Select a name for the output folder, the current date will be suggested otherwise for the output folder. You can also decide whether to continue in silent mode, which will repress the intermediate pre-processing steps. Furthermore, you can decide if you want to analyse a single image or multiple images, which you have to select afterwards. Fiji will start pre-processing and you have to select the ROI for all images you selected. The pre-processed image and the mask with the selected ROI will be saved in the output folder (as '\*\_filter.tif' and '\*\_mask.tif', respectively, see Output).
+ 
+*Gauging:*
+
+   The GUI will prompt you to select an image for parameter gauging if you analyze multiple images. If you chose to analyze a single image, this image will be used for gauging. In the gauging step, the optimal parameters for the segmentation of the cytoskeleton are determined by opening the gauging window. Press "Open Image" to see your selected image. Drag the parameter sliders (v<sub>width</sub>, v<sub>thres</sub>, v<sub>size</sub>, v<sub>int</sub>) to see the segmentation results (that might take some seconds). If you are satisfied with the segmentation, press "Choose Parameters" and your chosen parameters will be saved for the extraction process. Click "Back to Main Menu" to continue. Open another image with the "Open Image" button.
+   
     
 *Extraction:*
 
@@ -73,7 +74,7 @@ If you selected to do the complete analysis, you will be guided trough different
     
 *Gauging:*
 
-   The gauging GUI will open, where you have to select an image. Note that the gauging is only working, if you have a mask for your image. If not, first draw a mask for that image (using "Select specific CytoSeg step" > "Redraw mask"). Once you selected your parameters, click "Choose Parameters" and return to the main menu.
+   The gauging GUI will open, where you have to select an image. Note that the gauging is only working, if you have a mask for your image. If not, first draw a mask for that image (using "Select specific CytoSeg step" > "Redraw mask"). Once you selected your parameters, click "Choose Parameters" and return to the main menu. You can open another image with the "Open Image" button, which will immediately display the skeleton of the selected image using the last set of parameters. Please choose a pre-processed image for gauging (*\*\_filter.tif*) or the resulting skeleton might not match the segmentation results of the network extraction. 
     
 *Redraw mask:*
 
