@@ -146,14 +146,21 @@ class GaugingGui:
     def openImage(self):
         if self.osSystem == 1:
             self.lastdir = self.pathToPlugin
+            self.slash = '\\'
         else:
             self.lastdir = './'
+            self.slash = '/'
         if self.past == 1:
             self.filename = filedialog.askopenfilename(initialdir = self.lastdir, title ="Select image!",filetypes = (("png images","*.png") , ("tif images","*.tif"), ("jpeg images","*.jpg")) )
+            if self.filename[-11:] != '_filter.tif':
+                messagebox.showinfo("Warning", "The image you selected for parameter gauging is not a pre-processed image (*_filter.tif). \nThe resulting skeleton might not match the segmentation results from the network extraction.")
             self.displaySkeleton(self.past)
         else:
             if self.filename == "":
-                self.filename = filedialog.askopenfilename(initialdir = self.lastdir, title ="Select image!",filetypes = (("png images","*.png") , ("tif images","*.tif"), ("jpeg images","*.jpg")) )
+                self.filename = filedialog.askopenfilename(initialdir = self.lastdir, title ="Select image!",filetypes = (("png images","*.png") , ("tif images","*.tif"), ("jpeg images","*.jpg")))
+            else:
+                self.imagename = self.filename.split(self.slash)[-1]
+                self.filename = self.filename + self.slash + self.imagename + "_filter.tif"
             self.img = Image.open(self.filename)
             if self.img.size[0] == self.img.size[1]:
                 self.resized = self.img.resize((self.imageHeight, self.imageHeight),Image.ANTIALIAS)
@@ -173,7 +180,7 @@ class GaugingGui:
 
     # message that pops up when clicking Help
     def helpMessage(self):
-        messagebox.showinfo("Parameter information","v_width: width of filamentous structures to enhance with a 2D tubeness filter,\n\nv_thres: block size for adaptive median threshold,\n\nv_size: size of small objects to be removed,\n\nv_int: lowest average intensity of a filament.")
+        messagebox.showinfo("Parameter information","Please choose a pre-processed image for gauging (*_filter.tif) or the resulting skeleton might not match the results from the network extraction.\n\nv_width: width of filamentous structures to enhance with a 2D tubeness filter,\n\nv_thres: block size for adaptive median threshold,\n\nv_size: size of small objects to be removed,\n\nv_int: lowest average intensity of a filament.")
 
 
     # have to cheat here, scale bar is not showing the intervals for block, small and factr as it should...
