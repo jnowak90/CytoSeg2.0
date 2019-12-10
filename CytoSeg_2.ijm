@@ -67,6 +67,16 @@ function max(x, y) {
 		return(y);
 	}
 }
+
+// get index of element in array
+function get_index(array, value) {
+    for (i=0; i<array.length; i++) {
+        if (endsWith(array[i], value)) {  
+            return(i);
+        } 
+    }
+} 
+
 // check if file exists in path
 function checkFileExists(file, path){
 	fileList = getFileList(path);
@@ -313,44 +323,24 @@ function mainMenu() {
 
 	// MODE: complete CytoSeg analysis
 	if(choiceMenu == "Complete CytoSeg analysis"){
-		// gauging
-		Dialog.create("CytoSeg - Gauging");
-		Dialog.addMessage("Before starting CytoSeg, the right parameters have to be selected for the images. \nPlease select an image for the gauging of those parameters.");
-		Dialog.show();
-		pathToFile = File.openDialog("Select .tif Image");
-		newFilename = replaceFileFormat(pathToFile);
-		pathOutputMask = newFilename + "_mask.tif";
-		generateMask(pathToFile, pathOutputMask);
-		if (startsWith(osSystem, "Windows")) {
-			exec("cmd /c " + pathToPython3 + " " + pathToGUI + " " + pathToFile + " 1");
-		} else {
-			exec("sh", pathToBridge, pathToPython3, pathToGUI, pathToFile, "0");
-		}
-		
-		File.delete(pathOutputMask);
-		// extraction
+		// pre-processing
 		Dialog.create("CytoSeg - Settings");
-		Dialog.addMessage("Please name your Outputfolder \n(will be created in the folder where your images are)");
+		Dialog.addMessage("Please name your Outputfolder \n(will be created in the folder where your images are).");
 		outputFolderName = "" + dayOfMonth + "-" + month + "-" + year;
 		Dialog.addString("Folder", outputFolderName);
 		Dialog.addMessage("Do you want to proceed in silent mode?");
 		items = newArray("yes","no");
 		Dialog.addChoice("Choose", items, "yes");
-		Dialog.show();
-		outputFolder = Dialog.getString();
-		choiceBatch = Dialog.getChoice();
-		if (choiceBatch == "yes"){
-			setBatchMode(true);
-		}
-		updateParameters();
-		parameters = "" + randw + "," + randn + "," + depth + "," + sigma + "," + block + "," + small + "," + factr;
-		print("Used parameters for network extraction: \nv_width: " + sigma + "\nv_thres: " + block + "\nv_size: " + small + "\nv_int: " + factr);
-		Dialog.create("CytoSeg - Settings");
 		Dialog.addMessage("Do you want to process a single image or all images in a folder ?");
 		items = newArray("single","all");
 		Dialog.addChoice("process:", items, "all");
 		Dialog.show();
+		outputFolder = Dialog.getString();
+		choiceBatch = Dialog.getChoice();
 		choiceImage = Dialog.getChoice();
+		if (choiceBatch == "yes"){
+			setBatchMode(true);
+		}		
 		// single image
 		if (choiceImage == "single"){
 			pathToImage = File.openDialog("Select .tif Image");
@@ -364,10 +354,21 @@ function mainMenu() {
 			} else {
 				generateMask(filename, pathOutputImages + "/" + newFilename + "_mask.tif");
 			}
+			Dialog.create("CytoSeg - Gauging");
+			Dialog.addMessage("Before starting the network extraction, the right parameters have to be selected for the images.");
+			Dialog.show();
+			if (startsWith(osSystem, "Windows")) {
+				exec("cmd /c " + pathToPython3 + " " + pathToGUI + " " + pathToImage + " 1");
+			} else {
+				exec("sh", pathToBridge, pathToPython3, pathToGUI, pathToImage, "0");
+			}
+			updateParameters();
+			parameters = "" + randw + "," + randn + "," + depth + "," + sigma + "," + block + "," + small + "," + factr;
+			print("Used parameters for network extraction: \nv_width: " + sigma + "\nv_thres: " + block + "\nv_size: " + small + "\nv_int: " + factr);
 			print("\n#########################################\n\nPre-processing finished, post-processing in progress...\n");
 			// network extraction
 			pythonGraphAnalysis(pathToPython3, pathOutputImages, parameters);
-			print("\n#########################################\n\nAnalysis done.\n");			
+			print("\n#########################################\n\nAnalysis done.\n");	
 		}
 		// multiple images
 		else {
@@ -375,6 +376,7 @@ function mainMenu() {
 			imageList = getFileList(pathToImageFolder);
 			counter = 0;
 			extractionArray = newArray(0);
+			filenameArray = newArray(0);
 			print("\n#########################################\n\nCyto Seg is running...\n");
 			for (i=0; i<imageList.length; i++) {
 				if(endsWith(imageList[i],"tif") || endsWith(imageList[i], "TIF") || endsWith(imageList[i], "tiff") || endsWith(imageList[i], "TIFF")){
@@ -393,6 +395,7 @@ function mainMenu() {
 						}
 						array = newArray(pathOutputImages);
 						extractionArray = Array.concat(extractionArray, array);
+						filenameArray = Array.concat(filenameArray, filename);
 					}
 				}
 				else {					
@@ -405,14 +408,29 @@ function mainMenu() {
 				Dialog.addMessage("Non of the files inside the selected folder \ncontained tif images to process.");
 				Dialog.show();
 			}
+			Dialog.create("CytoSeg - Gauging");
+			Dialog.addMessage("Before starting the network extraction, the right parameters have to be selected for the images. \nPlease select an image for the gauging of those parameters.");
+			Dialog.addChoice("Choose", filenameArray, filenameArray[0]);
+			Dialog.show();
+			filenameChoice = Dialog.getChoice();  
+			indexChoice = get_index(extractionArray, filenameChoice);
+			pathToFile = extractionArray[indexChoice];
+			if (startsWith(osSystem, "Windows")) {
+				exec("cmd /c " + pathToPython3 + " " + pathToGUI + " " + pathToFile + " 1");
+			} else {
+				exec("sh", pathToBridge, pathToPython3, pathToGUI, pathToFile, "0");
+			}
+			updateParameters();
+			parameters = "" + randw + "," + randn + "," + depth + "," + sigma + "," + block + "," + small + "," + factr;
+			print("Used parameters for network extraction: \nv_width: " + sigma + "\nv_thres: " + block + "\nv_size: " + small + "\nv_int: " + factr);
 			print("\n#########################################\n\nPre-processing finished, post-processing in progress...\n");
 			// network extraction
 			for (j=0; j<extractionArray.length; j++){
 				pythonGraphAnalysis(pathToPython3, extractionArray[j], parameters);
 			}
-			print("\n#########################################\n\nAnalysis done.\n");	
-			}
-	}
+			print("\n#########################################\n\nAnalysis done.\n");
+		}
+	}		
 	
 	// MODE: select specific CytoSeg step
 	if(choiceMenu == "Select specific CytoSeg step"){
