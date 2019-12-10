@@ -144,13 +144,14 @@ class CytoSeg:
         originalProperties = np.array([np.hstack([d[0], d[-1]]) for d in originalData])
         originalGraphs = [d[1] for d in originalData]
         df = pd.DataFrame(originalProperties, columns=properties)
+        df = df.astype(dtype={'time' : 'int32', '# nodes': 'int32', '# edges' : 'int32', '# connected components' : 'int32', 'avg. edge capacity' : 'float', 'assortativity' : 'float', 'avg. path length' : 'float', 'CV path length' : 'float', 'algebraic connectivity' : 'float', 'CV edge angles' : 'float', 'crossing number' : 'float'})
         if self.osSystem == 1:
             np.save(self.pathToFolder + '\\originalGraphPositions.npy', originalPositions)
-            df.to_csv(self.pathToFolder + '\\originalGraphProperties.csv', sep=';', encoding='utf-8')
+            df.to_csv(self.pathToFolder + '\\originalGraphProperties.csv', sep=';', encoding='utf-8', index=False)
             nx.write_gpickle(originalGraphs, self.pathToFolder + '\\originalGraphs.gpickle')
         else:
             np.save(self.pathToFolder + '/originalGraphPositions.npy', originalPositions)
-            df.to_csv(self.pathToFolder + '/originalGraphProperties.csv', sep=';', encoding='utf-8')
+            df.to_csv(self.pathToFolder + '/originalGraphProperties.csv', sep=';', encoding='utf-8', index=False)
             nx.write_gpickle(originalGraphs, self.pathToFolder + '/originalGraphs.gpickle')
 
         # random graphs
@@ -158,12 +159,13 @@ class CytoSeg:
         randomProperties = np.array([np.hstack([d[0], d[-1]]) for d in randomData])
         randomGraphs = [d[1] for d in randomData]
         df = pd.DataFrame(randomProperties, columns=properties)
+        df = df.astype(dtype={'time' : 'int32', '# nodes': 'int32', '# edges' : 'int32', '# connected components' : 'int32', 'avg. edge capacity' : 'float', 'assortativity' : 'float', 'avg. path length' : 'float', 'CV path length' : 'float', 'algebraic connectivity' : 'float', 'CV edge angles' : 'float', 'crossing number' : 'float'})
         if self.osSystem == 1:
             np.save(self.pathToFolder + '\\randomGraphPositions.npy', randomPositions)
-            df.to_csv(self.pathToFolder + '\\randomGraphProperties.csv', sep=';', encoding='utf-8')
+            df.to_csv(self.pathToFolder + '\\randomGraphProperties.csv', sep=';', encoding='utf-8', index=False)
             nx.write_gpickle(randomGraphs, self.pathToFolder + '\\randomGraphs.gpickle')
         else:
             np.save(self.pathToFolder + '/randomGraphPositions.npy', randomPositions)
-            df.to_csv(self.pathToFolder + '/randomGraphProperties.csv', sep=';', encoding='utf-8')
+            df.to_csv(self.pathToFolder + '/randomGraphProperties.csv', sep=';', encoding='utf-8', index=False)
             nx.write_gpickle(randomGraphs, self.pathToFolder + '/randomGraphs.gpickle')
 myExtraction = CytoSeg(sys.argv[1], sys.argv[2], sys.argv[3])
