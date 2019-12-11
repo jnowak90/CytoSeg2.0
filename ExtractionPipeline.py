@@ -62,23 +62,27 @@ class CytoSeg:
             self.imgSlice = self.imgRaw[i]
             self.imgGaussian = skimage.filters.gaussian(self.imgSlice, self.sigma)
             self.imgTube, self.imgSkeleton = utils.skeletonize_graph(self.imgGaussian, self.mask, self.sigma, self.block, self.small, self.factr)
-            self.imgNodes = utils.node_graph(self.imgSkeleton > 0, self.imgGaussian)
+            if np.sum(self.imgSkeleton) == 0:
+                print("No skeleton was extracted from the selected image. Check the parameters and try again.")
+            else:
+                self.imgNodes = utils.node_graph(self.imgSkeleton > 0, self.imgGaussian)
 
-            self.originalGraph, self.originalPosition = utils.make_graph(self.imgNodes, self.imgGaussian)
-            self.originalNormalizedGraph, self.originalProperties, self.unifiedGraph = self.processGraph(self.originalGraph, self.originalPosition, self.imgGaussian, self.mask)
-            self.originalData.append([i, self.originalNormalizedGraph, self.originalPosition, self.originalProperties])
+                self.originalGraph, self.originalPosition = utils.make_graph(self.imgNodes, self.imgGaussian)
+                self.originalNormalizedGraph, self.originalProperties, self.unifiedGraph = self.processGraph(self.originalGraph, self.originalPosition, self.imgGaussian, self.mask)
+                self.originalData.append([i, self.originalNormalizedGraph, self.originalPosition, self.originalProperties])
 
-            for r in range(self.randn):
-                self.randomGraph, self.randomPosition = utils.randomize_graph(self.unifiedGraph, self.originalPosition, self.mask)
-                self.randomNormalizedGraph, self.randomProperties, _ = self.processGraph(self.randomGraph, self.randomPosition, self.imgGaussian, self.mask)
-                self.randomData.append([i, self.randomNormalizedGraph, self.randomPosition, self.randomProperties])
+                for r in range(self.randn):
+                    self.randomGraph, self.randomPosition = utils.randomize_graph(self.unifiedGraph, self.originalPosition, self.mask)
+                    self.randomNormalizedGraph, self.randomProperties, _ = self.processGraph(self.randomGraph, self.randomPosition, self.imgGaussian, self.mask)
+                    self.randomData.append([i, self.randomNormalizedGraph, self.randomPosition, self.randomProperties])
 
-            if i==0:
-                print('Export plot.')
-                self.plotSkeleton(self.originalData, self.randomData)
+                if i==0:
+                    print('Export plot.')
+                    self.plotSkeleton(self.originalData, self.randomData)
 
-        print('\nExport data.')
-        self.saveData(self.originalData, self.randomData)
+        if np.sum(self.imgSkeleton) != 0:
+            print('\nExport data.')
+            self.saveData(self.originalData, self.randomData)
 
     def processGraph(self, graph, graphPosition, Gaussian, mask):
         self.unifiedGraph = utils.unify_graph(graph)
