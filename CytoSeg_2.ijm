@@ -59,6 +59,7 @@ function min(x, y) {
 		return(y);
 	}
 }
+
 // find maximum
 function max(x, y) {
 	if (x > y) {
@@ -87,10 +88,24 @@ function checkFileExists(file, path){
 	}
 	return(false);
 }
+
+// check if directories exist in path
+function checkDirectoriesExist(path) {
+	fileList = getFileList(path);
+	directories = newArray(0);
+	for (i=0; i<fileList.length; i++){
+		if (endsWith(fileList[i], "/") || endsWith(fileList[i], "\\")){
+			directories = Array.concat(directories, fileList[i]);
+		}
+	}
+	directories = Array.concat(directories, "Current directory");
+	return directories;
+}
+
 // input custom parameters
 function createParameterDialog(){
 	Dialog.create("CytoSeg - Settings");
-	Dialog.addMessage("Please name your Outputfolder \n(will be generated in the folder where your images are)");
+	Dialog.addMessage("Please name your output folder \n(will be generated in the folder where your images are)");
 	outputFolderName = "" + dayOfMonth + "-" + month + "-" + year;
 	Dialog.addString("Folder", outputFolderName);
 	Dialog.addMessage("");
@@ -115,13 +130,14 @@ function createParameterDialog(){
 	Dialog.addNumber("Vint", factr);
 	 html = "<html>"
     +"<h2>Parameter information</h2>"
-    +"<p><b>masks</b>: if you want to reuse already created mask, choose <b color='red'>yes</b>.</p>"
-    +"<p><b>silent mode</b>: if you choose <b color='red'>yes</b>, all processes will be run in the background.</p>"
-    +"<p><b>rolling ball</b>: rolling ball size in pixel for background subtraction.</p>"
-    +"<p><b>v<sub>width</sub></b>: width of filamentous structures to enhance with a 2D tubeness filter.</p>"
-    +"<p><b>v<sub>thres</sub></b>: block size for adaptive median threshold.</p>"
-    +"<p><b>v<sub>size</sub></b>: size of small objects to be removed.</p>"
-    +"<p><b>v<sub>int</sub></b>: lowest average intensity of a filament.</p>";
+    +"<p><b>output folder</b>:  The specified output folder is created in the same folder as the selected images for analysis. For each image a subfolder with the name of the image is created in this output folder.</p>"
+    +"<p><b>masks</b>: If you want to reuse already created masks, choose <b color='red'>yes</b>.<br>If <b color='red'>yes</b> was selected, it will be checked if the masks exist in the specified output folder.</p>"
+    +"<p><b>silent mode</b>: If you choose <b color='red'>yes</b>, all processes will be run in the background.</p>"
+    +"<p><b>rolling ball</b>: Rolling ball size in pixel for background subtraction.</p>"
+    +"<p><b>v<sub>width</sub></b>: Width of filamentous structures to enhance with a 2D tubeness filter.</p>"
+    +"<p><b>v<sub>thres</sub></b>: Block size for adaptive median threshold.</p>"
+    +"<p><b>v<sub>size</sub></b>: Size of small objects to be removed.</p>"
+    +"<p><b>v<sub>int</sub></b>: Lowest average intensity of a filament.</p>";
 	Dialog.addHelp(html);
 	Dialog.show();
 	//return outputName;
@@ -455,15 +471,49 @@ function mainMenu() {
 				filename = getTitle();
 				newFilename = replaceFileFormat(filename);
 				folder = replace(pathToImage, filename, "");
-				if (startsWith(osSystem, "Windows")) {
-					generateMask(filename, folder + "\\" + newFilename + "_mask.tif");
+				directories = checkDirectoriesExist(folder);
+				if (directories.length > 1){
+					Dialog.create("CytoSeg - Settings");
+					Dialog.addMessage("In which output folder should the mask be saved?");
+					Dialog.addChoice("Folder", directories, "Current directory");
+					Dialog.show();
+					outputFolder = Dialog.getChoice();
+					if (outputFolder == "Current directory") {
+						if (startsWith(osSystem, "Windows")) {
+							generateMask(filename, folder + "\\" + newFilename + "_mask.tif");
+						} else {
+							generateMask(filename, folder + "/" + newFilename + "_mask.tif");
+						}
+					} else {
+						if (startsWith(osSystem, "Windows")) {
+							pathOutputFolder = folder + outputFolder + "\\" + newFilename + "\\";
+						} else {
+							pathOutputFolder = folder + outputFolder + "/" + newFilename + "/";
+						}	
+						if (!File.exists(pathOutputFolder)){
+							File.makeDirectory(pathOutputFolder);
+						}
+						generateMask(filename, pathOutputFolder + newFilename + "_mask.tif");
+					}
 				} else {
-					generateMask(filename, folder + "/" + newFilename + "_mask.tif");
+					if (startsWith(osSystem, "Windows")) {
+						generateMask(filename, folder + "\\" + newFilename + "_mask.tif");
+					} else {
+						generateMask(filename, folder + "/" + newFilename + "_mask.tif");
+					}
 				}
 			}
 			else {
 				pathToImageFolder = getDirectory("Choose a Directory");
 				imageList = getFileList(pathToImageFolder);
+				directories = checkDirectoriesExist(pathToImageFolder);
+				if (directories.length > 1){
+					Dialog.create("CytoSeg - Settings");
+					Dialog.addMessage("In which output folder should the masks be saved?");
+					Dialog.addChoice("Folder", directories);
+					Dialog.show();
+					outputFolder = Dialog.getChoice();
+				}
 				for (i=0; i<imageList.length; i++) {
 					if(endsWith(imageList[i],"tif") || endsWith(imageList[i], "TIF") || endsWith(imageList[i], "tiff") || endsWith(imageList[i], "TIFF")){
 						if(endsWith(imageList[i],"_mask.tif") || endsWith(imageList[i], "_mask.TIF") || endsWith(imageList[i], "_mask.tiff") || endsWith(imageList[i], "_mask.TIFF")){
@@ -472,10 +522,30 @@ function mainMenu() {
 							open(imageList[i]);
 							filename = getTitle();
 							newFilename = replaceFileFormat(filename);
-							if (startsWith(osSystem, "Windows")) {
-								generateMask(filename, pathToImageFolder + "\\" + newFilename + "_mask.tif");
+							if (directories.length > 1){
+								if (outputFolder == "Current directory"){
+									if (startsWith(osSystem, "Windows")) {
+										generateMask(filename, pathToImageFolder + newFilename + "_mask.tif");
+									} else {
+										generateMask(filename, pathToImageFolder + newFilename + "_mask.tif");
+									}
+								} else {
+									if (startsWith(osSystem, "Windows")) {
+										pathOutputFolder = pathToImageFolder + outputFolder + newFilename + "\\";
+									} else {
+										pathOutputFolder = pathToImageFolder + outputFolder + newFilename + "/";
+									}	
+									if (!File.exists(pathOutputFolder)){
+										File.makeDirectory(pathOutputFolder);
+									}
+									generateMask(filename, pathOutputFolder + newFilename + "_mask.tif");
+								}
 							} else {
-								generateMask(filename, pathToImageFolder + "/" + newFilename + "_mask.tif");
+								if (startsWith(osSystem, "Windows")) {
+									generateMask(filename, pathToImageFolder + newFilename + "_mask.tif");
+								} else {
+									generateMask(filename, pathToImageFolder + newFilename + "_mask.tif");
+								}	
 							}
 						}
 					}
@@ -520,9 +590,10 @@ function mainMenu() {
 			if (choiceImage == "single"){
 				pathToImage = File.openDialog("Select .tif Image");
 				pathOutputImages = createOutputFolder(pathToImage, outputFolder);
-				print("\n#########################################\n\nCyto Seg is running...\n");
+				print("\n#########################################\n\nCytoSeg pre-processing is running...\n");
 				filename = getTitle();
 				newFilename = replaceFileFormat(filename);
+				newFilename = replace(newFilename, "_filter", "");
 				preprocessImage(newFilename, pathOutputImages);
 				if (choiceMask == "no") {
 					if (startsWith(osSystem, "Windows")) {
@@ -533,17 +604,10 @@ function mainMenu() {
 				}
 				else {
 					dir = replace(pathToImage, filename, "");
-					if (checkFileExists(newFilename + "_mask.tif", dir) == false) {
+					if (checkFileExists(newFilename + "_mask.tif", pathOutputImages) == false) {
 						Dialog.create("WARNING");
 						Dialog.addMessage("No mask was found for this image.");
 						Dialog.show();
-					}
-					else {
-						if (startsWith(osSystem, "Windows")) {
-							File.copy(dir + newFilename + "_mask.tif", pathOutputImages + "\\" + newFilename + "_mask.tif");
-						} else {
-							File.copy(dir + newFilename + "_mask.tif", pathOutputImages + "/" + newFilename + "_mask.tif");
-						}
 					}
 				}
 				print("\n#########################################\n\nPre-processing finished, post-processing in progress...\n");
@@ -567,7 +631,7 @@ function mainMenu() {
 							}
 							else {
 								pathOutputImages = createOutputFolder(pathToImageFolder + imageList[i], outputFolder);
-								print("\nFinshed pre-processing of image " + i + 1 + " of " + imageList.length + "...\n");
+								print("\nFinished pre-processing of image " + i + 1 + " of " + imageList.length + "...\n");
 								filename = replaceFileFormat(imageList[i]);
 								preprocessImage(filename, pathOutputImages);
 								if (checkFileExists(filename + "_mask.tif", pathToImageFolder) == false) {
@@ -650,7 +714,7 @@ function mainMenu() {
 		//run("Close");
 	}
 	Dialog.create("Goodbye");
-	Dialog.addMessage("CytoSeg Analysis is finished.");
+	Dialog.addMessage("CytoSeg Analysis finished.");
 	items = newArray("continue","quit");
 	Dialog.addChoice("Do you want to continue or quit the application?", items, "quit");
 	Dialog.show();
