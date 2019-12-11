@@ -154,7 +154,8 @@ class GaugingGui:
             self.filename = filedialog.askopenfilename(initialdir = self.lastdir, title ="Select image!",filetypes = (("png images","*.png") , ("tif images","*.tif"), ("jpeg images","*.jpg")) )
             if self.filename[-11:] != '_filter.tif':
                 messagebox.showinfo("Warning", "The image you selected for parameter gauging is not a pre-processed image (*_filter.tif). \nThe resulting skeleton might not match the segmentation results of the network extraction.")
-                if os.path.exists(self.filename[:-4] + "_mask.tif"):
+                self.filenameSplit = (".").join(self.filename.split(".")[:-1])
+                if os.path.exists(self.filenameSplit + "_mask.tif"):
                     self.displaySkeleton(self.past)
                 else:
                     messagebox.showinfo("Warning", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
@@ -168,30 +169,25 @@ class GaugingGui:
                 self.filename = filedialog.askopenfilename(initialdir = self.lastdir, title ="Select image!",filetypes = (("png images","*.png") , ("tif images","*.tif"), ("jpeg images","*.jpg")))
                 if self.filename[-11:] != '_filter.tif':
                     messagebox.showinfo("Warning", "The image you selected for parameter gauging is not a pre-processed image (*_filter.tif). \nThe resulting skeleton might not match the segmentation results of the network extraction.")
+                    self.filenameSplit = (".").join(self.filename.split(".")[:-1])
+                    if os.path.exists(self.filenameSplit + "_mask.tif"):
+                        self.displayImage()
+                    else:
+                        messagebox.showinfo("Warning", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
+                else:
+                    if os.path.exists(self.filename[:-11] + "_mask.tif"):
+                        self.displayImage()
+                    else:
+                        messagebox.showinfo("Warning", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
+                        self.filename = ""
             else:
                 self.imagename = self.filename.split(self.slash)[-1]
                 self.filename = self.filename + self.slash + self.imagename + "_filter.tif"
-            if os.path.exists(self.filename[:-11] + "_mask.tif"):
-                self.img = Image.open(self.filename)
-                if self.img.size[0] == self.img.size[1]:
-                    self.resized = self.img.resize((self.imageHeight, self.imageHeight),Image.ANTIALIAS)
+                if os.path.exists(self.filename[:-11] + "_mask.tif"):
+                    self.displayImage()
                 else:
-                    self.max, self.argmax = np.max(self.img.size), np.argmax(self.img.size)
-                    self.min = (np.min(self.img.size) * self.imageHeight) / self.max
-                    if self.argmax == 0:
-                        self.resized = self.img.resize((self.imageHeight, int(self.min)), Image.ANTIALIAS)
-                    else:
-                        self.resized = self.img.resize((int(self.min), self.imageHeight), Image.ANTIALIAS)
-                self.image = ImageTk.PhotoImage(self.resized)
-                self.canvas.create_image(0, 0, anchor=NW, image=self.image)
-                if self.filename != "":
-                    self.lastdir = os.path.dirname(self.filename)
-                self.textVar.set("Change segmentation by adjusting parameter controllers.")
-                self.past = 1
-            else:
-                messagebox.showinfo("Warning", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
-                self.filename = ""
-
+                    messagebox.showinfo("Warning", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
+                    self.filename = ""
 
     # message that pops up when clicking Help
     def helpMessage(self):
@@ -218,6 +214,24 @@ class GaugingGui:
             np.savetxt(self.pathToPlugin + "\\defaultParameter.txt", [params], fmt='%s')
         else:
             np.savetxt(self.pathToPlugin + "/defaultParameter.txt", [params], fmt='%s')
+
+    def displayImage(self):
+        self.img = Image.open(self.filename)
+        if self.img.size[0] == self.img.size[1]:
+            self.resized = self.img.resize((self.imageHeight, self.imageHeight),Image.ANTIALIAS)
+        else:
+            self.max, self.argmax = np.max(self.img.size), np.argmax(self.img.size)
+            self.min = (np.min(self.img.size) * self.imageHeight) / self.max
+            if self.argmax == 0:
+                self.resized = self.img.resize((self.imageHeight, int(self.min)), Image.ANTIALIAS)
+            else:
+                self.resized = self.img.resize((int(self.min), self.imageHeight), Image.ANTIALIAS)
+        self.image = ImageTk.PhotoImage(self.resized)
+        self.canvas.create_image(0, 0, anchor=NW, image=self.image)
+        if self.filename != "":
+            self.lastdir = os.path.dirname(self.filename)
+        self.textVar.set("Change segmentation by adjusting parameter controllers.")
+        self.past = 1
 
     def displaySkeleton(self,ev):
         self.textVar.set("If you are satisfied with the segmentation, press 'Choose Parameters' to save\n the parameters for the CytoSeg analysis and go back to the main menu.")
