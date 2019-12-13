@@ -24,65 +24,85 @@ import utils
 
 class CytoSeg:
 
-    def __init__(self, pathToFolder, parameterString, osSystem):
+    def __init__(self, pathToPlugin, pathToFolder, parameterString, osSystem):
+
         self.pathToFolder = pathToFolder
         self.parameterString = parameterString
         self.osSystem = int(osSystem)
         self.originalData = []
         self.randomData = []
+        if self.osSystem == 1:
+            self.pathToPlugin = '\\'.join(pathToPlugin.split('\\')[:-1])
+        else:
+            self.pathToPlugin = '/'.join(pathToPlugin.split('/')[:-1])
 
         # set parameters
-        self.randw, self.randn, self.depth, self.sigma, self.block, self.small, self.factr = self.parameterString.split(",")
+        self.randn, self.sigma, self.block, self.small, self.factr = self.parameterString.split(",")
 
-        self.randw = int(self.randw)
         self.randn = int(self.randn)
-        self.depth = float(self.depth)
         self.sigma = float(self.sigma)
         self.block = float(self.block)
         self.small = float(self.small)
         self.factr = float(self.factr)
+        self.get_parameters()
 
         # go to selected folder and search filtered image
         os.chdir(self.pathToFolder)
         self.filterImg = glob.glob('*_filter.tif')
 
-        self.imgRaw = skimage.io.imread(self.filterImg[0], plugin='tifffile')
-        if self.imgRaw.shape[2] in (3, 4):
-            self.imgRaw = np.swapaxes(self.imgRaw, -1, -3)
-            self.imgRaw = np.swapaxes(self.imgRaw, -1, -2)
-        self.slices = len(self.imgRaw)
-
-        # find and open image mask
-        self.maskImg = glob.glob('*_mask.tif')
-        self.mask = skimage.io.imread(self.maskImg[0], plugin='tifffile') > 0
-
-        print('Start extraction of image', self.filterImg[0])
-        for i in range(self.slices):
-            print('\n' , i+1, 'of', self.slices)
-            self.imgSlice = self.imgRaw[i]
-            self.imgGaussian = skimage.filters.gaussian(self.imgSlice, self.sigma)
-            self.imgTube, self.imgSkeleton = utils.skeletonize_graph(self.imgGaussian, self.mask, self.sigma, self.block, self.small, self.factr)
-            if np.sum(self.imgSkeleton) == 0:
-                print("No skeleton was extracted from the selected image. Check the parameters and try again.")
+        if len(self.filterImg) == 0:
+            print("WARNING: No pre-processed image ('*_filter.tif') was found. Select pre-processing to create the image.")
+        else:
+            self.imgRaw = skimage.io.imread(self.filterImg[0], plugin='tifffile')
+            if len(self.imgRaw.shape) > 2 and self.imgRaw.shape[2] in (3, 4):
+                self.imgRaw = np.swapaxes(self.imgRaw, -1, -3)
+                self.imgRaw = np.swapaxes(self.imgRaw, -1, -2)
+                self.slices = len(self.imgRaw)
             else:
-                self.imgNodes = utils.node_graph(self.imgSkeleton > 0, self.imgGaussian)
+                self.slices = 1
 
-                self.originalGraph, self.originalPosition = utils.make_graph(self.imgNodes, self.imgGaussian)
-                self.originalNormalizedGraph, self.originalProperties, self.unifiedGraph = self.processGraph(self.originalGraph, self.originalPosition, self.imgGaussian, self.mask)
-                self.originalData.append([i, self.originalNormalizedGraph, self.originalPosition, self.originalProperties])
+            # find and open image mask
+            self.maskImg = glob.glob('*_mask.tif')
+            self.mask = skimage.io.imread(self.maskImg[0], plugin='tifffile') > 0
 
-                for r in range(self.randn):
-                    self.randomGraph, self.randomPosition = utils.randomize_graph(self.unifiedGraph, self.originalPosition, self.mask)
-                    self.randomNormalizedGraph, self.randomProperties, _ = self.processGraph(self.randomGraph, self.randomPosition, self.imgGaussian, self.mask)
-                    self.randomData.append([i, self.randomNormalizedGraph, self.randomPosition, self.randomProperties])
+            print('Start extraction of image', self.filterImg[0])
+            for i in range(self.slices):
+                print('\n' , i+1, 'of', self.slices)
+                if self.slices == 1:
+                    self.imgSlice = self.imgRaw.copy()
+                else:
+                    self.imgSlice = self.imgRaw[i]
+                self.imgGaussian = skimage.filters.gaussian(self.imgSlice, self.sigma)
+                self.imgTube, self.imgSkeleton = utils.skeletonize_graph(self.imgGaussian, self.mask, self.sigma, self.block, self.small, self.factr)
+                if np.sum(self.imgSkeleton) == 0:
+                    print("WARNING: No skeleton was extracted from the selected image. Check the parameters and try again.")
+                else:
+                    self.imgNodes = utils.node_graph(self.imgSkeleton > 0, self.imgGaussian)
 
-                if i==0:
-                    print('Export plot.')
-                    self.plotSkeleton(self.originalData, self.randomData)
+                    self.originalGraph, self.originalPosition = utils.make_graph(self.imgNodes, self.imgGaussian)
+                    self.originalNormalizedGraph, self.originalProperties, self.unifiedGraph = self.processGraph(self.originalGraph, self.originalPosition, self.imgGaussian, self.mask)
+                    self.originalData.append([i, self.originalNormalizedGraph, self.originalPosition, self.originalProperties])
 
-        if np.sum(self.imgSkeleton) != 0:
-            print('\nExport data.')
-            self.saveData(self.originalData, self.randomData)
+                    for r in range(self.randn):
+                        self.randomGraph, self.randomPosition = utils.randomize_graph(self.unifiedGraph, self.originalPosition, self.mask)
+                        self.randomNormalizedGraph, self.randomProperties, _ = self.processGraph(self.randomGraph, self.randomPosition, self.imgGaussian, self.mask)
+                        self.randomData.append([i, self.randomNormalizedGraph, self.randomPosition, self.randomProperties])
+
+                    if i==0:
+                        print('Export plot.')
+                        self.plotSkeleton(self.originalData, self.randomData)
+
+            if np.sum(self.imgSkeleton) != 0:
+                print('\nExport data.')
+                self.saveData(self.originalData, self.randomData)
+
+    # save the selected parameters in a file
+    def get_parameters(self):
+        params = "" + str(self.randn) + "," + str(self.sigma) + "," + str(self.block) + "," + str(self.small) + "," + str(self.factr)
+        if self.osSystem == 1:
+            np.savetxt(self.pathToPlugin + "\\defaultParameter.txt", [params], fmt='%s')
+        else:
+            np.savetxt(self.pathToPlugin + "/defaultParameter.txt", [params], fmt='%s')
 
     def processGraph(self, graph, graphPosition, Gaussian, mask):
         self.unifiedGraph = utils.unify_graph(graph)
@@ -107,7 +127,10 @@ class CytoSeg:
 
             fig, (ax1, ax2) = plt.subplots(ncols=2)
 
-            ax1.imshow(self.imgRaw[0], cmap=cmapImage)
+            if self.slices == 1:
+                ax1.imshow(self.imgRaw, cmap=cmapImage)
+            else:
+                ax1.imshow(self.imgRaw[0], cmap=cmapImage)
             ax1.set_title('Biological actin network', fontsize=7)
             originalEdgeCapacity = 1.0 * np.array([property['capa'] for node1, node2, property in originalGraph.edges(data=True)])
             nx.draw_networkx_edges(originalGraph, originalPosition, edge_color=plt.cm.plasma(originalEdgeCapacity / originalEdgeCapacity.max()), width=1.2, ax=ax1)
@@ -120,7 +143,10 @@ class CytoSeg:
             ax1.axes.get_yaxis().set_visible(False)
             ax1.axes.get_xaxis().set_visible(False)
 
-            ax2.imshow(self.imgRaw[0], cmap=cmapImage)
+            if self.slices == 1:
+                ax2.imshow(self.imgRaw, cmap=cmapImage)
+            else:
+                ax2.imshow(self.imgRaw[0], cmap=cmapImage)
             ax2.set_title('Randomized actin network', fontsize=7)
             randomEdgeCapacity = 1.0 * np.array([property['capa'] for node1, node2, property in randomGraph.edges(data=True)])
             nx.draw_networkx_edges(randomGraph, randomPosition, edge_color=plt.cm.plasma(randomEdgeCapacity / randomEdgeCapacity.max()), width=1.2, ax=ax2)
@@ -172,4 +198,4 @@ class CytoSeg:
             np.save(self.pathToFolder + '/randomGraphPositions.npy', randomPositions)
             df.to_csv(self.pathToFolder + '/randomGraphProperties.csv', sep=';', encoding='utf-8', index=False)
             nx.write_gpickle(randomGraphs, self.pathToFolder + '/randomGraphs.gpickle')
-myExtraction = CytoSeg(sys.argv[1], sys.argv[2], sys.argv[3])
+myExtraction = CytoSeg(sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3])
