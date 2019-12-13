@@ -105,22 +105,23 @@ function checkDirectoriesExist(path) {
 // input custom parameters
 function createParameterDialog(){
 	Dialog.create("CytoSeg - Settings");
-	Dialog.addMessage("Please name your output folder \n(will be generated in the folder where your images are)");
+	Dialog.addMessage("Please name your output folder \n(will be generated in the folder where your images are).");
 	outputFolderName = "" + dayOfMonth + "-" + month + "-" + year;
 	Dialog.addString("Folder", outputFolderName);
 	Dialog.addMessage("");
 	Dialog.addMessage("Do you want to use existing masks?");
 	items = newArray("yes", "no");
 	Dialog.addChoice("Choose", items, "no")
-	Dialog.addMessage("");
 	Dialog.addMessage("Do you want to proceed in silent mode?");
 	Dialog.addChoice("Choose", items, "yes");
+	itemsProcesses = newArray("Pre-processing and extraction", "Pre-processing only", "Extraction only");
+	Dialog.addChoice("Choose", itemsProcesses, "Pre-processing and extraction");
 	Dialog.addMessage("");
 	Dialog.addMessage("Parameters");
 	Dialog.addNumber("rolling ball", roll);
 	Dialog.addMessage("");
-	//Dialog.addNumber("depth", depth);
-	//Dialog.addMessage("");
+	Dialog.addNumber("random graphs", randn);
+	Dialog.addMessage("");
 	Dialog.addNumber("Vwidth", sigma);
 	Dialog.addMessage("");
 	Dialog.addNumber("Vthres", block);
@@ -133,28 +134,23 @@ function createParameterDialog(){
     +"<p><b>output folder</b>:  The specified output folder is created in the same folder as the selected images for analysis. For each image a subfolder with the name of the image is created in this output folder.</p>"
     +"<p><b>masks</b>: If you want to reuse already created masks, choose <b color='red'>yes</b>.<br>If <b color='red'>yes</b> was selected, it will be checked if the masks exist in the specified output folder.</p>"
     +"<p><b>silent mode</b>: If you choose <b color='red'>yes</b>, all processes will be run in the background.</p>"
-    +"<p><b>rolling ball</b>: Rolling ball size in pixel for background subtraction.</p>"
+    +"<p><b>Pre-processing and extraction</b>: Choose if you want to do both pre-processing of the image and the network extraction or just one of the steps. If you choose <b color='red'>only extraction</b> make sure to select <b color='red'>yes</b> for reusing already created masks or new masks will be created.</p>"
+    +"<p><b>rolling ball</b>: Select the number of random graphs generated for each extracted network of the image..</p>"
+    +"<p><b>random graphs</b>: Width of filamentous structures to enhance with a 2D tubeness filter.</p>"
     +"<p><b>v<sub>width</sub></b>: Width of filamentous structures to enhance with a 2D tubeness filter.</p>"
     +"<p><b>v<sub>thres</sub></b>: Block size for adaptive median threshold.</p>"
     +"<p><b>v<sub>size</sub></b>: Size of small objects to be removed.</p>"
     +"<p><b>v<sub>int</sub></b>: Lowest average intensity of a filament.</p>";
 	Dialog.addHelp(html);
 	Dialog.show();
-	//return outputName;
 	}
+	
 // create new output folder
 function createOutputFolder(path, outputFolder) {
 	if(endsWith(path, "tif") || endsWith(path, "TIF") || endsWith(path, "tiff") || endsWith(path, "TIFF")){
 		open(path);
 		filename = getTitle();
 		dir = replace(path, filename, "");
-		/*//check if the output folder already exists
-		outputNameNew = outputFolder + "/";
-		if (checkFileExists(outputNameNew, dir)){
-			Dialog.create("WARNING");
-			Dialog.addMessage("NOTICE\nThe output folder you named already exists.\nPress OK to continue or CANCEL to start again");
-			Dialog.show();
-		}*/
 		//creating Output directory
 		pathOutput = dir + outputFolder;
 		File.makeDirectory(pathOutput);
@@ -173,6 +169,7 @@ function createOutputFolder(path, outputFolder) {
 		Dialog.show();
 	}
 }
+
 // remove .tif ending from filename
 function replaceFileFormat(filename) {
 	newFilename =replace(filename, ".tif", "");
@@ -181,8 +178,9 @@ function replaceFileFormat(filename) {
 	newFilename =replace(newFilename, ".TIFF", "");
 	return newFilename;
 }
+
 // generate mask of image ROI
-function generateMask(pathToFilter, pathOutputMask){
+function generateMask(pathToFilter, pathOutputMask, message){
 	//open filter image
 	setBatchMode(true);
 	openImages = getList("image.titles");
@@ -195,12 +193,14 @@ function generateMask(pathToFilter, pathOutputMask){
 	I = lc * lzz * ltt;
 	run('8-bit');
 	// use maximum projection of filter image to select ROI
-	run('Properties...', 'channels=1 slices=1 frames=I unit=pixel pixel_width=1.0000 pixel_height=1.0000 voxel_depth=1.0000');
-	run('Z Project...', 'projection=[Max Intensity]');
+	if (I > 1) {
+		run('Properties...', 'channels=1 slices=1 frames=I unit=pixel pixel_width=1.0000 pixel_height=1.0000 voxel_depth=1.0000');
+		run('Z Project...', 'projection=[Max Intensity]');
+	} 
 	// freehand tool to select ROI
 	setBatchMode(false);
 	setTool('Freehand');
-	waitForUser("Select the area of interest FIRST. \nYou can redraw the mask as often as you like. \nWhen you are done,  press 'OK'.");
+	waitForUser(message);
 	setBatchMode(true);
 	// prepare mask
 	run('Clear Outside');                  
@@ -217,6 +217,7 @@ function generateMask(pathToFilter, pathOutputMask){
 	run('Close');
 	run('Close All');
 }
+
 // update parameters
 function updateParameters() {
 	if (startsWith(osSystem, "Windows")) {
@@ -227,14 +228,11 @@ function updateParameters() {
 	if (File.exists(pathDefaultParameters)){
 		parametersDefault = File.openAsString(pathDefaultParameters);
 		parametersDefaultArray = split(parametersDefault, ",");
-		roll = parametersDefaultArray[0];
-		randw = parametersDefaultArray[1];
-		randn = parametersDefaultArray[2];
-		depth = parametersDefaultArray[3];
-		sigma = parametersDefaultArray[4];
-		block = parametersDefaultArray[5];
-		small = parametersDefaultArray[6];
-		factr = parametersDefaultArray[7];
+		randn = parametersDefaultArray[0];
+		sigma = parametersDefaultArray[1];
+		block = parametersDefaultArray[2];
+		small = parametersDefaultArray[3];
+		factr = parametersDefaultArray[4];
 	}
 }
 // pre-process image
@@ -245,6 +243,18 @@ function preprocessImage(filename, pathOutputImages) {
 	lzz = min(lz, lt);
 	ltt = max(lz, lt);
 	I = lc * lzz * ltt;
+	if (I == 1) {
+		Dialog.create("WARNING");
+		Dialog.addMessage("You selected a single image for analysis. For a more reliable analysis \n select an image stack.");
+		Dialog.show();
+		preprocessSingleImage(filename, pathOutputImages);
+	} else {
+		preprocessImageStack(filename, pathOutputImages, I);
+	}
+}
+
+// pre-process image stack
+function preprocessImageStack(filename, pathOutputImages, I) {
 	print("Start stack registration");
 	run('StackReg ', 'transformation=[Rigid Body]');
 	run('8-bit');
@@ -263,6 +273,24 @@ function preprocessImage(filename, pathOutputImages) {
 	saveAs('Tiff', outputFilter);
 	run('Close All');
 }
+
+// pre-process single image
+function preprocessSingleImage(filename, pathOutputImages) {
+	print("Convert image to 8-bit");
+	run('8-bit');
+	run('Subtract Background...', 'rolling=roll');
+	run('Despeckle');               
+	run('Enhance Contrast...', 'saturated=0.2');  
+	newTitle = filename + "_filter";
+	if (startsWith(osSystem, "Windows")) {
+		outputFilter = pathOutputImages + "\\" + newTitle;
+	} else {
+		outputFilter = pathOutputImages + "/" + newTitle;
+	}
+	saveAs('Tiff', outputFilter);
+	run('Close All');
+}
+
 // call a python script which is inside the fiji.app/plugins/Cyto_Seg folder (a bridge bash script needed to execute the python script in python3, otherwise fiji uses python2)
 function pythonGraphAnalysis(pathToPython3, pathToFolder, parameters){
 	if (startsWith(osSystem, "Windows")) {
@@ -278,7 +306,7 @@ function pythonGraphAnalysis(pathToPython3, pathToFolder, parameters){
 //user input for python path
 function selectPythonPath(pathToCytoSeg) {
 	Dialog.create("CytoSeg - Welcome");
-	Dialog.addMessage("Welcome to CytoSeg Analysis. \nBefore you start using CytoSeg, please set your full Python 3 path.");
+	Dialog.addMessage("Welcome to CytoSeg. \nBefore you start using CytoSeg, please set your full Python 3 path.");
 	Dialog.addMessage("Linux/Mac User: type 'which python3' in your Terminal and copy the path into the field below.\nYour path should look something like /home/myComputer/anaconda/bin/python3");
 	Dialog.addMessage("Windows User: search for python.exe with the Search button, open the file location and copy the path in the field below. \nYour path should look something like C:\\Users\\myName\\AppData\\Local\\Programs\\Python\\Python37\\python.exe");
 	Dialog.addString("Path:","");
@@ -293,14 +321,13 @@ function selectPythonPath(pathToCytoSeg) {
 ///// VARIABLES /////
 getDateAndTime(year, month, dayOfWeek, dayOfMonth, hour, minute, second, msec);
 var month = month + 1;    			// bug of the getDateAndTime function, month start with 0
-var roll = 50;
-var randw = 1;
 var randn = 1;
-var depth = 7.75;
 var sigma = 2.0;
 var block = 101.0;
 var small = 25.0;
 var factr = 0.5;
+var roll = 50;
+var messageROI = "Select the area of interest for the mask. \nYou can redraw the mask as often as you like. \nWhen you are done,  press 'OK'.";
 updateParameters();
 if (startsWith(osSystem, "Windows")) {
 	pathToGUI = getDirectory("plugins") + "CytoSeg\\gaugingGui.py";
@@ -332,8 +359,8 @@ if (!(File.exists(pathToPython3TXT))) {
 function mainMenu() {	
 	Dialog.create("CytoSeg - Menu");
 	Dialog.addMessage("Welcome to CytoSeg Analysis \n");
-	items = newArray("Complete CytoSeg analysis", "Select specific CytoSeg step", "Reset Python 3 path");
-	Dialog.addRadioButtonGroup("What do you want to do?", items, 3, 1, "yes");
+	itemsMain = newArray("Complete CytoSeg analysis", "Select specific CytoSeg step", "Reset Python 3 path");
+	Dialog.addRadioButtonGroup("What do you want to do?", itemsMain, 3, 1, "yes");
 	Dialog.show();
 	choiceMenu = Dialog.getRadioButton();
 
@@ -341,15 +368,15 @@ function mainMenu() {
 	if(choiceMenu == "Complete CytoSeg analysis"){
 		// pre-processing
 		Dialog.create("CytoSeg - Settings");
-		Dialog.addMessage("Please name your Outputfolder \n(will be created in the folder where your images are).");
+		Dialog.addMessage("Please name your output folder \n(will be created in the folder where your images are).");
 		outputFolderName = "" + dayOfMonth + "-" + month + "-" + year;
 		Dialog.addString("Folder", outputFolderName);
 		Dialog.addMessage("Do you want to proceed in silent mode?");
-		items = newArray("yes","no");
-		Dialog.addChoice("Choose", items, "yes");
+		itemsMode = newArray("yes","no");
+		Dialog.addChoice("Choose", itemsMode, "yes");
 		Dialog.addMessage("Do you want to process a single image or all images in a folder ?");
-		items = newArray("single","all");
-		Dialog.addChoice("process:", items, "all");
+		itemsImage = newArray("single","all");
+		Dialog.addChoice("process:", itemsImage, "all");
 		Dialog.show();
 		outputFolder = Dialog.getString();
 		choiceBatch = Dialog.getChoice();
@@ -361,27 +388,27 @@ function mainMenu() {
 		if (choiceImage == "single"){
 			pathToImage = File.openDialog("Select .tif Image");
 			pathOutputImages = createOutputFolder(pathToImage, outputFolder);
-			print("\n#########################################\n\nCyto Seg is running...\n");
+			print("\n#########################################\n\nImage pre-processing in progress...\n");
 			filename = getTitle();
 			newFilename = replaceFileFormat(filename);
 			preprocessImage(newFilename, pathOutputImages);
 			if (startsWith(osSystem, "Windows")) {
-				generateMask(filename, pathOutputImages + "\\" + newFilename + "_mask.tif");
+				generateMask(filename, pathOutputImages + "\\" + newFilename + "_mask.tif", messageROI);
 			} else {
-				generateMask(filename, pathOutputImages + "/" + newFilename + "_mask.tif");
+				generateMask(filename, pathOutputImages + "/" + newFilename + "_mask.tif", messageROI);
 			}
 			Dialog.create("CytoSeg - Gauging");
-			Dialog.addMessage("Before starting the network extraction, the right parameters have to be selected for the images.");
+			Dialog.addMessage("Before starting the network extraction, the right \nparameters have to be selected for the images.");
 			Dialog.show();
 			if (startsWith(osSystem, "Windows")) {
-				exec("cmd /c " + pathToPython3 + " " + pathToGUI + " " + pathToImage + " 1");
+				exec("cmd /c " + pathToPython3 + " " + pathToGUI + " " + pathOutputImages + " 1");
 			} else {
-				exec("sh", pathToBridge, pathToPython3, pathToGUI, pathToImage, "0");
+				exec("sh", pathToBridge, pathToPython3, pathToGUI, pathOutputImages, "0");
 			}
 			updateParameters();
-			parameters = "" + randw + "," + randn + "," + depth + "," + sigma + "," + block + "," + small + "," + factr;
+			parameters = "" + randn + "," + sigma + "," + block + "," + small + "," + factr;
 			print("Used parameters for network extraction: \nv_width: " + sigma + "\nv_thres: " + block + "\nv_size: " + small + "\nv_int: " + factr);
-			print("\n#########################################\n\nPre-processing finished, post-processing in progress...\n");
+			print("\n#########################################\n\nNetwork extraction in progress...\n");
 			// network extraction
 			pythonGraphAnalysis(pathToPython3, pathOutputImages, parameters);
 			print("\n#########################################\n\nAnalysis done.\n");	
@@ -393,7 +420,7 @@ function mainMenu() {
 			counter = 0;
 			extractionArray = newArray(0);
 			filenameArray = newArray(0);
-			print("\n#########################################\n\nCyto Seg is running...\n");
+			print("\n#########################################\n\nImage pre-processing in progress...\n");
 			for (i=0; i<imageList.length; i++) {
 				if(endsWith(imageList[i],"tif") || endsWith(imageList[i], "TIF") || endsWith(imageList[i], "tiff") || endsWith(imageList[i], "TIFF")){
 					if(endsWith(imageList[i],"_mask.tif") || endsWith(imageList[i], "_mask.TIF") || endsWith(imageList[i], "_mask.tiff") || endsWith(imageList[i], "_mask.TIFF")){
@@ -405,9 +432,9 @@ function mainMenu() {
 						filename = replaceFileFormat(imageList[i]);
 						preprocessImage(filename, pathOutputImages);
 						if (startsWith(osSystem, "Windows")) {
-							generateMask(imageList[i], pathOutputImages + "\\" + filename + "_mask.tif");
+							generateMask(imageList[i], pathOutputImages + "\\" + filename + "_mask.tif", messageROI);
 						} else {
-							generateMask(imageList[i], pathOutputImages + "/" + filename + "_mask.tif");
+							generateMask(imageList[i], pathOutputImages + "/" + filename + "_mask.tif", messageROI);
 						}
 						array = newArray(pathOutputImages);
 						extractionArray = Array.concat(extractionArray, array);
@@ -425,7 +452,7 @@ function mainMenu() {
 				Dialog.show();
 			}
 			Dialog.create("CytoSeg - Gauging");
-			Dialog.addMessage("Before starting the network extraction, the right parameters have to be selected for the images. \nPlease select an image for the gauging of those parameters.");
+			Dialog.addMessage("Before starting the network extraction, the right \nparameters have to be selected for the images. \nPlease select an image for the gauging of those parameters.");
 			Dialog.addChoice("Choose", filenameArray, filenameArray[0]);
 			Dialog.show();
 			filenameChoice = Dialog.getChoice();  
@@ -437,9 +464,9 @@ function mainMenu() {
 				exec("sh", pathToBridge, pathToPython3, pathToGUI, pathToFile, "0");
 			}
 			updateParameters();
-			parameters = "" + randw + "," + randn + "," + depth + "," + sigma + "," + block + "," + small + "," + factr;
+			parameters = "" + randn + "," + sigma + "," + block + "," + small + "," + factr;
 			print("Used parameters for network extraction: \nv_width: " + sigma + "\nv_thres: " + block + "\nv_size: " + small + "\nv_int: " + factr);
-			print("\n#########################################\n\nPre-processing finished, post-processing in progress...\n");
+			print("\n#########################################\n\nNetwork extraction in progress...\n");
 			// network extraction
 			for (j=0; j<extractionArray.length; j++){
 				pythonGraphAnalysis(pathToPython3, extractionArray[j], parameters);
@@ -452,8 +479,8 @@ function mainMenu() {
 	if(choiceMenu == "Select specific CytoSeg step"){
 		Dialog.create("CytoSeg - Settings");
 		Dialog.addMessage("Select the step you want to repeat.\n");
-		items = newArray("Redraw mask", "Parameter gauging", "Pre-processing and extraction");
-		Dialog.addRadioButtonGroup("What do you want to do?", items, 3, 1, "yes");
+		itemsStep = newArray("Redraw mask", "Parameter gauging", "Pre-processing and extraction");
+		Dialog.addRadioButtonGroup("Which step do you want to do?", itemsStep, 3, 1, "yes");
 		Dialog.show();
 		choiceStep = Dialog.getRadioButton();
 
@@ -461,8 +488,8 @@ function mainMenu() {
 		if (choiceStep == "Redraw mask") {
 			Dialog.create("CytoSeg - Settings");
 			Dialog.addMessage("Do you want to process a single image or all images in a folder ?");
-			items = newArray("single", "all");
-			Dialog.addChoice("process:", items, "single");
+			itemsProcess = newArray("single", "all");
+			Dialog.addChoice("process:", itemsProcess, "single");
 			Dialog.show();
 			choiceData = Dialog.getChoice();
 			if (choiceData == "single") {
@@ -480,9 +507,9 @@ function mainMenu() {
 					outputFolder = Dialog.getChoice();
 					if (outputFolder == "Current directory") {
 						if (startsWith(osSystem, "Windows")) {
-							generateMask(filename, folder + "\\" + newFilename + "_mask.tif");
+							generateMask(filename, folder + "\\" + newFilename + "_mask.tif", messageROI);
 						} else {
-							generateMask(filename, folder + "/" + newFilename + "_mask.tif");
+							generateMask(filename, folder + "/" + newFilename + "_mask.tif", messageROI);
 						}
 					} else {
 						if (startsWith(osSystem, "Windows")) {
@@ -493,13 +520,13 @@ function mainMenu() {
 						if (!File.exists(pathOutputFolder)){
 							File.makeDirectory(pathOutputFolder);
 						}
-						generateMask(filename, pathOutputFolder + newFilename + "_mask.tif");
+						generateMask(filename, pathOutputFolder + newFilename + "_mask.tif", messageROI);
 					}
 				} else {
 					if (startsWith(osSystem, "Windows")) {
-						generateMask(filename, folder + "\\" + newFilename + "_mask.tif");
+						generateMask(filename, folder + "\\" + newFilename + "_mask.tif", messageROI);
 					} else {
-						generateMask(filename, folder + "/" + newFilename + "_mask.tif");
+						generateMask(filename, folder + "/" + newFilename + "_mask.tif", messageROI);
 					}
 				}
 			}
@@ -525,9 +552,9 @@ function mainMenu() {
 							if (directories.length > 1){
 								if (outputFolder == "Current directory"){
 									if (startsWith(osSystem, "Windows")) {
-										generateMask(filename, pathToImageFolder + newFilename + "_mask.tif");
+										generateMask(filename, pathToImageFolder + newFilename + "_mask.tif", messageROI);
 									} else {
-										generateMask(filename, pathToImageFolder + newFilename + "_mask.tif");
+										generateMask(filename, pathToImageFolder + newFilename + "_mask.tif", messageROI);
 									}
 								} else {
 									if (startsWith(osSystem, "Windows")) {
@@ -538,13 +565,13 @@ function mainMenu() {
 									if (!File.exists(pathOutputFolder)){
 										File.makeDirectory(pathOutputFolder);
 									}
-									generateMask(filename, pathOutputFolder + newFilename + "_mask.tif");
+									generateMask(filename, pathOutputFolder + newFilename + "_mask.tif", messageROI);
 								}
 							} else {
 								if (startsWith(osSystem, "Windows")) {
-									generateMask(filename, pathToImageFolder + newFilename + "_mask.tif");
+									generateMask(filename, pathToImageFolder + newFilename + "_mask.tif", messageROI);
 								} else {
-									generateMask(filename, pathToImageFolder + newFilename + "_mask.tif");
+									generateMask(filename, pathToImageFolder + newFilename + "_mask.tif", messageROI);
 								}	
 							}
 						}
@@ -570,8 +597,9 @@ function mainMenu() {
 			outputFolder = Dialog.getString();
 			choiceMask = Dialog.getChoice();
 			choiceBatch = Dialog.getChoice();
+			selectedProcess = Dialog.getChoice();
 			roll = Dialog.getNumber();
-			//depth = Dialog.getNumber();
+			randn = Dialog.getNumber();
 			sigma = Dialog.getNumber();
 			block = Dialog.getNumber();
 			small = Dialog.getNumber();
@@ -579,40 +607,47 @@ function mainMenu() {
 			if (choiceBatch == "yes"){
 				setBatchMode(true);
 			}
-			parameters = "" + randw + "," + randn + "," + depth + "," + sigma + "," + block + "," + small + "," + factr;
+			parameters = "" + randn + "," + sigma + "," + block + "," + small + "," + factr;
 			Dialog.create("CytoSeg - Settings");
 			Dialog.addMessage("Do you want to process a single image or all images in a folder ?");
-			items = newArray("single", "all");
-			Dialog.addChoice("process:", items, "all");
+			itemsExtraction = newArray("single", "all");
+			Dialog.addChoice("Process:", itemsExtraction, "all");
 			Dialog.show();
 			choiceImage = Dialog.getChoice();
 			// single image
 			if (choiceImage == "single"){
 				pathToImage = File.openDialog("Select .tif Image");
 				pathOutputImages = createOutputFolder(pathToImage, outputFolder);
-				print("\n#########################################\n\nCytoSeg pre-processing is running...\n");
 				filename = getTitle();
 				newFilename = replaceFileFormat(filename);
 				newFilename = replace(newFilename, "_filter", "");
-				preprocessImage(newFilename, pathOutputImages);
+				if (selectedProcess != "Extraction only") {
+					print("\n#########################################\n\nImage pre-processing in progress...\n");
+					preprocessImage(newFilename, pathOutputImages);
+				}
 				if (choiceMask == "no") {
 					if (startsWith(osSystem, "Windows")) {
-						generateMask(filename, pathOutputImages + "\\" + newFilename + "_mask.tif");
+						generateMask(filename, pathOutputImages + "\\" + newFilename + "_mask.tif", messageROI);
 					} else {
-						generateMask(filename, pathOutputImages + "/" + newFilename + "_mask.tif");
+						generateMask(filename, pathOutputImages + "/" + newFilename + "_mask.tif", messageROI);
 					}
 				}
 				else {
 					dir = replace(pathToImage, filename, "");
 					if (checkFileExists(newFilename + "_mask.tif", pathOutputImages) == false) {
-						Dialog.create("WARNING");
-						Dialog.addMessage("No mask was found for this image.");
-						Dialog.show();
+						if (startsWith(osSystem, "Windows")) {
+							generateMask(filename, pathOutputImages + "\\" + newFilename + "_mask.tif", "No mask was found.\n" + messageROI);
+						} else {
+							generateMask(filename, pathOutputImages + "/" + newFilename + "_mask.tif", "No mask was found.\n" + messageROI);
+						}
 					}
 				}
-				print("\n#########################################\n\nPre-processing finished, post-processing in progress...\n");
 				// network extraction
-				pythonGraphAnalysis(pathToPython3, pathOutputImages, parameters);
+				if (selectedProcess != "Pre-processing only") {
+					print("\n#########################################\n\nNetwork extraction in progress...\n");
+					pythonGraphAnalysis(pathToPython3, pathOutputImages, parameters);
+				}
+
 				print("\n#########################################\n\nAnalysis done.\n");			
 			}
 			// multiple images
@@ -621,36 +656,33 @@ function mainMenu() {
 				imageList = getFileList(pathToImageFolder);
 				counter = 0;
 				extractionArray = newArray(0);
-				print("\n#########################################\n\nCyto Seg is running...\n");
+				print("\n#########################################\n\nImage pre-processing in progress...\n");
 				if (choiceMask == "yes") {
 					for (i=0; i<imageList.length; i++) {
 						if(endsWith(imageList[i],"tif") || endsWith(imageList[i], "TIF") || endsWith(imageList[i], "tiff") || endsWith(imageList[i], "TIFF")){
 							if(endsWith(imageList[i],"_mask.tif") || endsWith(imageList[i], "_mask.TIF") || endsWith(imageList[i], "_mask.tiff") || endsWith(imageList[i], "_mask.TIFF")){
-								print("A mask image was skipped.");
+								print("A mask image was skipped.");	
 								counter += 1;
 							}
 							else {
 								pathOutputImages = createOutputFolder(pathToImageFolder + imageList[i], outputFolder);
-								print("\nFinished pre-processing of image " + i + 1 + " of " + imageList.length + "...\n");
-								filename = replaceFileFormat(imageList[i]);
-								preprocessImage(filename, pathOutputImages);
-								if (checkFileExists(filename + "_mask.tif", pathToImageFolder) == false) {
-									if (startsWith(osSystem, "Windows")) {
-										generateMask(imageList[i], pathOutputImages + "\\" + filename + "_mask.tif");
-									} else {
-										generateMask(imageList[i], pathOutputImages + "/" + filename + "_mask.tif");
-									}
+								if (selectedProcess != "Extraction only") {
+									print("\nFinished pre-processing of image " + i + 1 + " of " + imageList.length + "...\n"); 
+									preprocessImage(filename, pathOutputImages);
 								}
-								else {
+								filename = replaceFileFormat(imageList[i]);
+								if (checkFileExists(filename + "_mask.tif", pathOutputImages) == false) {
 									if (startsWith(osSystem, "Windows")) {
-										File.copy(pathToImageFolder + filename + "_mask.tif", pathOutputImages + "\\" + filename + "_mask.tif");
+										generateMask(imageList[i], pathOutputImages + "\\" + filename + "_mask.tif", "No mask was found.\n" + messageROI);
 									} else {
-										File.copy(pathToImageFolder + filename + "_mask.tif", pathOutputImages + "/" + filename + "_mask.tif");
+										generateMask(imageList[i], pathOutputImages + "/" + filename + "_mask.tif", "No mask was found.\n" + messageROI);
 									}
 								}
 							}
-								array = newArray(pathOutputImages);
-								extractionArray = Array.concat(extractionArray, array);
+								if (selectedProcess != "Pre-processing only") {
+									array = newArray(pathOutputImages);
+									extractionArray = Array.concat(extractionArray, array);
+								}
 						}
 						else {
 							print("A file that is not a .tif file was skipped.");
@@ -667,16 +699,20 @@ function mainMenu() {
 							}
 							else {
 								pathOutputImages = createOutputFolder(pathToImageFolder + imageList[i], outputFolder);
-								print("\nFinshed pre-processing of image " + i + 1 + " of " + imageList.length + "...\n");
-								filename = replaceFileFormat(imageList[i]);
-								preprocessImage(filename, pathOutputImages);
-								if (startsWith(osSystem, "Windows")) {
-									generateMask(imageList[i], pathOutputImages + "\\" + filename + "_mask.tif");
-								} else {
-									generateMask(imageList[i], pathOutputImages + "/" + filename + "_mask.tif");
+								if (selectedProcess != "Extraction only") {
+									print("\nFinshed pre-processing of image " + i + 1 + " of " + imageList.length + "...\n");
+									preprocessImage(filename, pathOutputImages);
 								}
-								array = newArray(pathOutputImages);
-								extractionArray = Array.concat(extractionArray, array);
+								filename = replaceFileFormat(imageList[i]);
+								if (startsWith(osSystem, "Windows")) {
+									generateMask(imageList[i], pathOutputImages + "\\" + filename + "_mask.tif", messageROI);
+								} else {
+									generateMask(imageList[i], pathOutputImages + "/" + filename + "_mask.tif", messageROI);
+								}
+								if (selectedProcess != "Pre-processing only"){
+									array = newArray(pathOutputImages);
+									extractionArray = Array.concat(extractionArray, array);
+								}
 							}
 						}
 						else {					
@@ -690,10 +726,12 @@ function mainMenu() {
 					Dialog.addMessage("Non of the files inside the selected folder \ncontained tif images to process.");
 					Dialog.show();
 				}
-				print("\n#########################################\n\nPre-processing finished, post-processing in progress...\n");
 				// network extraction
-				for (j=0; j<extractionArray.length; j++){
-					pythonGraphAnalysis(pathToPython3, extractionArray[j], parameters);
+				if (selectedProcess != "Pre-processing only") {
+					print("\n#########################################\n\nNetwork extraction in progress...\n");
+					for (j=0; j<extractionArray.length; j++){
+						pythonGraphAnalysis(pathToPython3, extractionArray[j], parameters);
+					}
 				}
 				print("\n#########################################\n\nAnalysis done.\n");	
 			}
@@ -714,7 +752,7 @@ function mainMenu() {
 		//run("Close");
 	}
 	Dialog.create("Goodbye");
-	Dialog.addMessage("CytoSeg Analysis finished.");
+	Dialog.addMessage("CytoSeg finished.");
 	items = newArray("continue","quit");
 	Dialog.addChoice("Do you want to continue or quit the application?", items, "quit");
 	Dialog.show();
