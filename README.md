@@ -117,11 +117,11 @@ originalGraphs = pickle.load(open('originalGraphs.gpickle', 'rb'))
 originalPositions = np.load('originalGraphPositions.npy')
 
 # plot first graph 
-graph1, pos1 = originalGraphs[0], originalPositions[0]
-edgeCapacity = 1.0 * np.array([d['capa'] for u,v,d in graph1.edges(data=True)])
+graph, nodePositions = originalGraphs[0], originalPositions[0]
+edgeCapacity = 1.0 * np.array([property['capa'] for node1, node2, property in graph.edges(data=True)])
 
 fig, ax = plt.subplots(1, 1, figsize=(3,3))
-nx.draw_networkx(graph1, pos1[:, :2], with_labels=False, node_size=0, edge_color=plt.cm.plasma(edgeCapacity/ edgeCapacity.max()))
+nx.draw_networkx(graph, nodePositions, with_labels=False, node_size=0, edge_color=plt.cm.plasma(edgeCapacity/ edgeCapacity.max()))
 plt.show()
 
 # import network property table
