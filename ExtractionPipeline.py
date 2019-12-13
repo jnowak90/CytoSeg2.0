@@ -54,9 +54,11 @@ class CytoSeg:
             print("WARNING: No pre-processed image ('*_filter.tif') was found. Select pre-processing to create the image.")
         else:
             self.imgRaw = skimage.io.imread(self.filterImg[0], plugin='tifffile')
-            if len(self.imgRaw.shape) > 2 and self.imgRaw.shape[2] in (3, 4):
-                self.imgRaw = np.swapaxes(self.imgRaw, -1, -3)
-                self.imgRaw = np.swapaxes(self.imgRaw, -1, -2)
+            print(self.imgRaw.shape)
+            if len(self.imgRaw.shape) > 2:
+                if self.imgRaw.shape[2] in (3, 4):
+                    self.imgRaw = np.swapaxes(self.imgRaw, -1, -3)
+                    self.imgRaw = np.swapaxes(self.imgRaw, -1, -2)
                 self.slices = len(self.imgRaw)
             else:
                 self.slices = 1
