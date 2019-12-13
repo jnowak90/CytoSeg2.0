@@ -47,30 +47,19 @@ def tube_filter(gaussianImage, sigma):
     finalImage = 255.0 * (negativeImage - negativeImage.min()) / (negativeImage.max() - negativeImage.min())
     return(finalImage)
 
-# set randw, randn and depth from parameter list
-pathToPlugin = sys.argv[0]
-filename = sys.argv[1]
-osSystem = int(sys.argv[2])
-if osSystem == 1:
-    pathToPlugin = '\\'.join(pathToPlugin.split('\\')[:-1])
-else:
-    pathToPlugin = '/'.join(pathToPlugin.split('/')[:-1])
-roll = 50
-randw = 1
-randn = 1
-depth = 7.75
-
-
 class GaugingGui:
 
-    def __init__(self, root, filename, pathToPlugin, osSystem):
+    def __init__(self, root, pathToPlugin, filename, osSystem):
         self.root = root
         if filename == 'None':
             self.filename = ""
         else:
             self.filename = filename
-        self.pathToPlugin = pathToPlugin
-        self.osSystem = osSystem
+        self.osSystem = int(osSystem)
+        if self.osSystem == 1:
+            self.pathToPlugin = '\\'.join(pathToPlugin.split('\\')[:-1])
+        else:
+            self.pathToPlugin = '/'.join(pathToPlugin.split('/')[:-1])
         self.past = 0
 
         self.root.title('CytoSeg 2.0 - Gauging')
@@ -209,7 +198,7 @@ class GaugingGui:
 
     # save the selected parameters in a file
     def get_parameters(self):
-        params = "" + str(roll) + "," + str(randw) + "," + str(randn) + "," + str(depth) + "," + str(self.sigma.get()) + "," + str(self.block.get()+1) + "," + str(self.small.get()+2) + "," + str(format(float(self.factr.get()) - 0.1, ".1f"))
+        params = "" + str(1) + "," + str(self.sigma.get()) + "," + str(self.block.get()+1) + "," + str(self.small.get()+2) + "," + str(format(float(self.factr.get()) - 0.1, ".1f"))
         if self.osSystem == 1:
             np.savetxt(self.pathToPlugin + "\\defaultParameter.txt", [params], fmt='%s')
         else:
@@ -307,5 +296,5 @@ class GaugingGui:
 
 
 master = Tk()
-my_gui = GaugingGui(master, filename, pathToPlugin, osSystem)
+my_gui = GaugingGui(master, sys.argv[0], sys.argv[1], sys.argv[2])
 master.mainloop()
