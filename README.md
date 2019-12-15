@@ -17,7 +17,7 @@ Fiji Macro and GUI for CytoSeg to automatically extract and analyze the actin cy
 ## Requirements
 
 - Only tif files are supported.
-- Only image stacks are supported, single images will raise an error.
+- The usage of image stacks is preferred, although using single images is possible, too (but will raise a warning).
 - The following plugins have to be installed in Fiji (in the mentioned order):
   - TurboReg (http://bigwww.epfl.ch/thevenaz/turboreg/)
   - StackReg (http://bigwww.epfl.ch/thevenaz/stackreg/)
