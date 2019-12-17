@@ -32,12 +32,12 @@ function systemTestFiji() {
 // test Python 3 path and if all necessary Python modules are installed
 function systemTestPython(osSystem, pathToPython3, pathToCytoSeg) {
 	if (startsWith(osSystem, "Windows")) {
-		pathToTestArray = getDirectory('plugins') + "CytoSeg\\TestArray.npy";
+		pathToTestArray = getDirectory('plugins') + "CytoSeg\\TestFile.txt";
 		pathToTest = getDirectory("plugins") + "CytoSeg\\SystemTest.py";
 		exec("cmd /c " + pathToPython3 + " " + pathToTest + " " + pathToTestArray);
 	
 	} else {
-		pathToTestArray = getDirectory('plugins') + "CytoSeg/TestArray.npy";
+		pathToTestArray = getDirectory('plugins') + "CytoSeg/TestFile.txt";
 		pathToTest = getDirectory("plugins") + "CytoSeg/SystemTest.py";
 		exec(pathToPython3, pathToTest, pathToTestArray);
 	}
@@ -45,7 +45,7 @@ function systemTestPython(osSystem, pathToPython3, pathToCytoSeg) {
 	if 	(File.exists(pathToTestArray)){
 		ok = File.delete(pathToTestArray);
 	} else {
-		print("No working Pyhton 3 version was found. Please check your Python 3 path.");
+		print("No working Python 3 version was found. Please check your Python 3 path.");
 		pathToPython3 = selectPythonPath(pathToCytoSeg);
 		systemTestPython(osSystem, pathToPython3, pathToCytoSeg);
 	}
