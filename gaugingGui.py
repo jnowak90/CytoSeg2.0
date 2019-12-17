@@ -140,7 +140,7 @@ class GaugingGui:
             self.lastdir = './'
             self.slash = '/'
         if self.past == 1:
-            self.filename = filedialog.askopenfilename(initialdir = self.lastdir, title ="Select image!",filetypes = (("png images","*.png") , ("tif images","*.tif"), ("jpeg images","*.jpg")) )
+            self.filename = filedialog.askopenfilename(initialdir = self.lastdir, title ="Select image!",filetypes = (("tif images","*.tif")))
             if self.filename[-11:] != '_filter.tif':
                 messagebox.showinfo("Warning", "The image you selected for parameter gauging is not a pre-processed image (*_filter.tif). \nThe resulting skeleton might not match the segmentation results of the network extraction.")
                 self.filenameSplit = (".").join(self.filename.split(".")[:-1])
