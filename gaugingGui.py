@@ -140,14 +140,15 @@ class GaugingGui:
             self.lastdir = './'
             self.slash = '/'
         if self.past == 1:
-            self.filename = filedialog.askopenfilename(initialdir = self.lastdir, title ="Select image!",filetypes = (("tif images","*.tif")))
+            self.filename = filedialog.askopenfilename(initialdir = self.lastdir, title ="Select image!", filetypes = [("tif images", "*.tif")])
             if self.filename[-11:] != '_filter.tif':
-                messagebox.showinfo("Warning", "The image you selected for parameter gauging is not a pre-processed image (*_filter.tif). \nThe resulting skeleton might not match the segmentation results of the network extraction.")
-                self.filenameSplit = (".").join(self.filename.split(".")[:-1])
-                if os.path.exists(self.filenameSplit + "_mask.tif"):
-                    self.displaySkeleton(self.past)
-                else:
-                    messagebox.showinfo("Warning", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
+                if self.filename != "":
+                    messagebox.showinfo("Warning", "The image you selected for parameter gauging is not a pre-processed image (*_filter.tif). \nThe resulting skeleton might not match the segmentation results of the network extraction.")
+                    self.filenameSplit = (".").join(self.filename.split(".")[:-1])
+                    if os.path.exists(self.filenameSplit + "_mask.tif"):
+                        self.displaySkeleton(self.past)
+                    else:
+                        messagebox.showinfo("Warning", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
             else:
                 if os.path.exists(self.filename[:-11] + "_mask.tif"):
                     self.displaySkeleton(self.past)
@@ -155,14 +156,15 @@ class GaugingGui:
                     messagebox.showinfo("Warning", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
         else:
             if self.filename == "":
-                self.filename = filedialog.askopenfilename(initialdir = self.lastdir, title ="Select image!",filetypes = (("png images","*.png") , ("tif images","*.tif"), ("jpeg images","*.jpg")))
+                self.filename = filedialog.askopenfilename(initialdir = self.lastdir, title ="Select image!",filetypes = [("tif images","*.tif")])
                 if self.filename[-11:] != '_filter.tif':
-                    messagebox.showinfo("Warning", "The image you selected for parameter gauging is not a pre-processed image (*_filter.tif). \nThe resulting skeleton might not match the segmentation results of the network extraction.")
-                    self.filenameSplit = (".").join(self.filename.split(".")[:-1])
-                    if os.path.exists(self.filenameSplit + "_mask.tif"):
-                        self.displayImage()
-                    else:
-                        messagebox.showinfo("Warning", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
+                    if self.filename != "":
+                        messagebox.showinfo("Warning", "The image you selected for parameter gauging is not a pre-processed image (*_filter.tif). \nThe resulting skeleton might not match the segmentation results of the network extraction.")
+                        self.filenameSplit = (".").join(self.filename.split(".")[:-1])
+                        if os.path.exists(self.filenameSplit + "_mask.tif"):
+                            self.displayImage()
+                        else:
+                            messagebox.showinfo("Warning", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
                 else:
                     if os.path.exists(self.filename[:-11] + "_mask.tif"):
                         self.displayImage()
