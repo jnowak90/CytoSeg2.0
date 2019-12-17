@@ -44,6 +44,7 @@ function systemTestPython(osSystem, pathToPython3, pathToCytoSeg) {
 
 	if 	(File.exists(pathToTestArray)){
 		ok = File.delete(pathToTestArray);
+		mainMenu();
 	} else {
 		print("No working Python 3 version was found. Please check your Python 3 path.");
 		pathToPython3 = selectPythonPath(pathToCytoSeg);
@@ -353,6 +354,7 @@ if (!(File.exists(pathToPython3TXT))) {
 	systemTestPython(osSystem, pathToPython3, pathToCytoSeg);
 } else {
 	pathToPython3 = File.openAsString(pathToPython3TXT);
+	mainMenu();
 }
 
 //// MENU: choose mode
@@ -428,7 +430,6 @@ function mainMenu() {
 						counter += 1;
 					} else {
 						pathOutputImages = createOutputFolder(pathToImageFolder + imageList[i], outputFolder);
-						print("\nFinshed pre-processing of image " + i + 1 + " of " + imageList.length + "...\n");
 						filename = replaceFileFormat(imageList[i]);
 						preprocessImage(filename, pathOutputImages);
 						if (startsWith(osSystem, "Windows")) {
@@ -667,8 +668,7 @@ function mainMenu() {
 							else {
 								pathOutputImages = createOutputFolder(pathToImageFolder + imageList[i], outputFolder);
 								if (selectedProcess != "Extraction only") {
-									print("\nFinished pre-processing of image " + i + 1 + " of " + imageList.length + "...\n"); 
-									preprocessImage(filename, pathOutputImages);
+									preprocessImage(imageList[i], pathOutputImages);
 								}
 								filename = replaceFileFormat(imageList[i]);
 								if (checkFileExists(filename + "_mask.tif", pathOutputImages) == false) {
@@ -700,8 +700,7 @@ function mainMenu() {
 							else {
 								pathOutputImages = createOutputFolder(pathToImageFolder + imageList[i], outputFolder);
 								if (selectedProcess != "Extraction only") {
-									print("\nFinshed pre-processing of image " + i + 1 + " of " + imageList.length + "...\n");
-									preprocessImage(filename, pathOutputImages);
+									preprocessImage(imageList[i], pathOutputImages);
 								}
 								filename = replaceFileFormat(imageList[i]);
 								if (startsWith(osSystem, "Windows")) {
@@ -762,4 +761,4 @@ function mainMenu() {
 	}
 }
 //// MENU: calling MainMenu
-mainMenu();
+//mainMenu();
