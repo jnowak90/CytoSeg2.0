@@ -9,14 +9,14 @@ Created on Fri Nov 29 12:09:16 2019
 ### System test ###
 import importlib
 import sys
-import numpy as np
 
 print("\nYour python version used for this script:")
 print(sys.version)
 
 path = sys.argv[1]
-testArray = np.ones((3, 3))
-np.save(path, testArray)
+f = open("TestFile.txt", "w")
+f.write("This is a file to test if the right Python 3 path was found.")
+f.close()
 
 modules = ['matplotlib', 'networkx', 'numpy', 'pandas', 'PIL', 'scipy', 'skimage', 'shapely', 'packaging', 'collections', 'glob', 'itertools', 'tkinter']
 
