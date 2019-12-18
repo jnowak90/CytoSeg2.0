@@ -667,10 +667,11 @@ function mainMenu() {
 							}
 							else {
 								pathOutputImages = createOutputFolder(pathToImageFolder + imageList[i], outputFolder);
-								if (selectedProcess != "Extraction only") {
-									preprocessImage(imageList[i], pathOutputImages);
-								}
 								filename = replaceFileFormat(imageList[i]);
+								filename = replace(filename, "_filter", "");
+								if (selectedProcess != "Extraction only") {
+									preprocessImage(filename, pathOutputImages);
+								}
 								if (checkFileExists(filename + "_mask.tif", pathOutputImages) == false) {
 									if (startsWith(osSystem, "Windows")) {
 										generateMask(imageList[i], pathOutputImages + "\\" + filename + "_mask.tif", "No mask was found.\n" + messageROI);
@@ -699,10 +700,11 @@ function mainMenu() {
 							}
 							else {
 								pathOutputImages = createOutputFolder(pathToImageFolder + imageList[i], outputFolder);
-								if (selectedProcess != "Extraction only") {
-									preprocessImage(imageList[i], pathOutputImages);
-								}
 								filename = replaceFileFormat(imageList[i]);
+								filename = replace(filename, "_filter", "");
+								if (selectedProcess != "Extraction only") {
+									preprocessImage(filename, pathOutputImages);
+								}
 								if (startsWith(osSystem, "Windows")) {
 									generateMask(imageList[i], pathOutputImages + "\\" + filename + "_mask.tif", messageROI);
 								} else {
