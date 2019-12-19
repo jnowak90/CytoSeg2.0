@@ -21,6 +21,7 @@ Fiji Macro and GUI for CytoSeg to automatically extract and analyze the actin cy
 - The following plugins have to be installed in Fiji (in the mentioned order):
   - TurboReg (http://bigwww.epfl.ch/thevenaz/turboreg/)
   - StackReg (http://bigwww.epfl.ch/thevenaz/stackreg/)
+  To install, extract the downloaded files, then install the plugins with **Fiji > Plugins > Install PlugIn...** and selecting the corresponding *\*.jar* file. Restart Fiji after installing.
 - An installation of Python 3 is required. Following modules have to be installed (used versions during development in *brackets*):
   - numpy (*1.14.0*)
   - scipy (*1.2.1*)
@@ -43,7 +44,7 @@ Fiji Macro and GUI for CytoSeg to automatically extract and analyze the actin cy
 
 4. Start Fiji. If Fiji was already open, restart it.
 
-5. The macro should be now in Plugins > CytoSeg.
+5. The macro should be now in Plugins > CytoSeg (at the bottom).
 
 
 ## Workflow
@@ -59,35 +60,39 @@ If you selected to do the complete analysis, you will be guided trough different
       
 *Pre-processing:*
 
-   Select a name for the output folder, the current date will be suggested otherwise for the output folder. You can also decide whether to continue in silent mode, which will repress the intermediate pre-processing steps. Furthermore, you can decide if you want to analyse a single image or multiple images, which you have to select afterwards. Fiji will start pre-processing and you have to select the ROI for all images you selected. The pre-processed image and the mask with the selected ROI will be saved in the output folder (as '\*\_filter.tif' and '\*\_mask.tif', respectively, see Output).
+   Select a name for the output folder, the current date will be suggested otherwise for the output folder. You can also decide whether to continue in silent mode, which will repress the intermediate pre-processing steps (default). Furthermore, you can decide if you want to analyse a single image or multiple images, which you have to select afterwards. Fiji will start pre-processing and you have to select the region of interset (ROI) for all images and click 'OK'. If you turned of the silent mode, select the ROI from the top image (*MAX_\*_.tif*). The pre-processed image and the mask with the selected ROI will be saved in the output folder (as '\*\_filter.tif' and '\*\_mask.tif', respectively, see Output).
  
 *Gauging:*
 
-   The GUI will prompt you to select an image for parameter gauging if you analyze multiple images. If you chose to analyze a single image, this image will be used for gauging. In the gauging step, the optimal parameters for the segmentation of the cytoskeleton are determined by opening the gauging window. Press "Open Image" to see your selected image. Drag the parameter sliders (v<sub>width</sub>, v<sub>thres</sub>, v<sub>size</sub>, v<sub>int</sub>) to see the segmentation results (that might take some seconds). If you are satisfied with the segmentation, press "Choose Parameters" and your chosen parameters will be saved for the extraction process. Click "Back to Main Menu" to continue. Open another image with the "Open Image" button.
+   The GUI will prompt you to select an image for parameter gauging if you analyze multiple images. If you chose to analyze a single image, this image will be used for gauging. In the gauging step, the optimal parameters for the segmentation of the cytoskeleton are determined by opening the gauging window. Press "Open Image" to see your selected image. Drag the parameter sliders (v<sub>width</sub>, v<sub>thres</sub>, v<sub>size</sub>, v<sub>int</sub>) to see the segmentation results (that might take some seconds). If you are satisfied with the segmentation, press "Choose Parameters" and your chosen parameters will be saved for the extraction process. Click "Back to Main Menu" to continue. Open another image with the "Open Image" button, which will immediately show the extracted skeleton using the last chosen set of parameters.
    
     
 *Extraction:*
 
-   The extraction is done in Python 3. The pre-processed image and the mask will be used to extract a network from the cytoskeleton of every slice in the image. Additionally, for every extracted network a random network will be generated. The extracted and random networks and their node positions will be saved in the output folder, as well as a plot of the first image slice and the overlayed extracted network (colored according to the edge capacity). Calculated  network properties are saved in tables for both extracted and random networks.
+   The extraction is done in Python 3. The pre-processed image and the mask will be used to extract a network from the cytoskeleton of every slice in the image. Additionally, for every extracted network a user-defined number of random network will be generated (default=1). The extracted and random networks and their node positions will be saved in the output folder, as well as a plot of the first image slice and the overlayed extracted network (colored according to the edge capacity). Calculated  network properties are saved in tables for both extracted and random networks.
     
 #### Selecte specific analysis steps
     
-*Gauging:*
-
-   The gauging GUI will open, where you have to select an image. Note that the gauging is only working, if you have a mask for your image. If not, first draw a mask for that image (using "Select specific CytoSeg step" > "Redraw mask"). Once you selected your parameters, click "Choose Parameters" and return to the main menu. You can open another image with the "Open Image" button, which will immediately display the skeleton of the selected image using the last set of parameters. Please choose a pre-processed image for gauging (*\*\_filter.tif*) or the resulting skeleton might not match the segmentation results of the network extraction. 
-    
 *Redraw mask:*
 
-   Select if you want to draw or redraw the mask of a single or multiple images. Make your selection and press "OK". The mask will be saved in the same folder as the selected image. 
+   Select if you want to draw or redraw the mask of a single or multiple images. Make your selection and press "OK". The mask will be saved in the same folder as the selected image. If the image folder contains other directories it can be chosen in which directory the mask should be saved. 
+   
+    
+*Gauging:*
+
+   The gauging GUI will open, where you have to select an image. Note that the gauging is only working if you have a mask for your image. If not, first draw a mask for that image (using "Select specific CytoSeg step" > "Redraw mask"). Once you selected your parameters, click "Choose Parameters" and return to the main menu. You can open another image with the "Open Image" button, which will immediately display the skeleton of the selected image using the last set of parameters. Please choose a pre-processed image for gauging (*\*\_filter.tif*) or the resulting skeleton might not match the segmentation results of the network extraction. 
+    
     
 *Pre-processing and extraction:*
 
-   Select the name of your output folder and if you want to use already existing masks (applicable if you already ran this part before). You can also select the silent mode here and change the different parameters. If you selected parameters before during gauging, the parameters will be selected here automatically. 
+   Select the name of your output folder and if you want to use already existing masks (applicable if you already ran this part before). You can also select the silent mode here and change the different parameters. If you selected parameters before during gauging, the parameters will be selected here automatically. Additionally, you can decide if you want to do both pre-processing and network extraction or only one of the processes.
 
 ## Output
 The following outputs are generated when using the pre-processing and extraction pipeline (example outputs are shown in the DemoImages folder):
+Pre-processing:
   - **\*\_filter.tif**: pre-processed image
   - **\*\_mask.tif**: mask of ROI for image
+Network extraction:
   - **originalGraphs.gpickle**: collection of all extracted networks from the input image (one network per image slice)
   - **randomGraphs.gpickle**: collection of randomized networks for input image (one randomized network per extracted network)
   - **originalGraphPositions.npy**: node positions for original networks
@@ -95,7 +100,9 @@ The following outputs are generated when using the pre-processing and extraction
   - **ExtractedNetworks.pdf**: plot of the original and randomized extracted network of the first image slice
   - **originalGraphProperties.csv**: table of graph properties for the original networks 
   - **randomGraphProperties.csv**: table of graph properties for the random networks
+Parameter gauging:
   - **skeletonOnImage.png**: image of resulting segmentation from chosen gauging parameters
+ Furthermore, the Python3 path, selected gauging parameters and the log file of each session are saved in the **Fiji.app > plugins > CytoSeg** folder.
 
 ## Demo
 The DemoImages folder contains example image that can be used to test the plugin. 
@@ -137,7 +144,7 @@ Check if you added the correct Python path when prompted at the beginning. You c
 ```bash
 YOURPYTHONPATH -c "print('Hello World')"
 ```
-YOURPYTHONPATH is the path you copied into the plugin at the beginning. If you don't get an output (Hello World printed in the terminal/CMD), your python path is wrong.
+YOURPYTHONPATH is the path you copied into the plugin at the beginning. If you don't get an output (Hello World is printed in the terminal/CMD), your python path is wrong.
 
 ### StackReg or TurboReg raise an error
 Check if you correctly installed the plugins. You should find TurboReg and StackReg in the Fiji Plugins Menu. MultiStackReg should be in Plugins > Registration. If you can't find the plugins there, the installation didn't work. To install the plugins correctly, download them from the links in Requirements and decompress. Then go to Fiji > Plugins > Install Plugin... and choose the corresponding .jar file of the plugin. Restart Fiji to see if the plugin was installed.
@@ -146,10 +153,7 @@ Check if you correctly installed the plugins. You should find TurboReg and Stack
 Try to install StackReg from: https://sites.imagej.net/BIG-EPFL/plugins/
 
 ### The gauging GUI opened the image, but nothing happens when moving the sliders
-Make sure you created a mask (\*\_mask.tif) for the selected image (\*\_filter.tif) that is in the same folder. If not, you can do so by choosing ""Select specific CytoSeg step" > "Redraw mask".
-
-### The plugin raises an error for the bleach correction (this command requires a stack)
-The image you selected is not a stack, but a single image. CytoSeg only works with image stacks.
+Make sure you created a mask (\*\_mask.tif) for the selected image (\*\_filter.tif) that is in the same folder. If the mask is missing an Error message will be shown. You can create a mask by choosing ""Select specific CytoSeg step" > "Redraw mask".
 
 ### The plugin raises an error: java.io.FileNotFoundException (Mac OS)
 Move the Fiji application into the Applications folder.
