@@ -21,6 +21,7 @@ Fiji Macro and GUI for CytoSeg to automatically extract and analyze the actin cy
 - The following plugins have to be installed in Fiji (in the mentioned order):
   - TurboReg (http://bigwww.epfl.ch/thevenaz/turboreg/)
   - StackReg (http://bigwww.epfl.ch/thevenaz/stackreg/)
+  
   To install, extract the downloaded files, then install the plugins with **Fiji > Plugins > Install PlugIn...** and selecting the corresponding *\*.jar* file. Restart Fiji after installing.
 - An installation of Python 3 is required. Following modules have to be installed (used versions during development in *brackets*):
   - numpy (*1.14.0*)
@@ -89,9 +90,11 @@ If you selected to do the complete analysis, you will be guided trough different
 
 ## Output
 The following outputs are generated when using the pre-processing and extraction pipeline (example outputs are shown in the DemoImages folder):
+
 Pre-processing:
   - **\*\_filter.tif**: pre-processed image
   - **\*\_mask.tif**: mask of ROI for image
+  
 Network extraction:
   - **originalGraphs.gpickle**: collection of all extracted networks from the input image (one network per image slice)
   - **randomGraphs.gpickle**: collection of randomized networks for input image (one randomized network per extracted network)
@@ -100,6 +103,7 @@ Network extraction:
   - **ExtractedNetworks.pdf**: plot of the original and randomized extracted network of the first image slice
   - **originalGraphProperties.csv**: table of graph properties for the original networks 
   - **randomGraphProperties.csv**: table of graph properties for the random networks
+  
 Parameter gauging:
   - **skeletonOnImage.png**: image of resulting segmentation from chosen gauging parameters
  Furthermore, the Python3 path, selected gauging parameters and the log file of each session are saved in the **Fiji.app > plugins > CytoSeg** folder.
