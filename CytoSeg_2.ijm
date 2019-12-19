@@ -183,7 +183,6 @@ function replaceFileFormat(filename) {
 // generate mask of image ROI
 function generateMask(pathToFilter, pathOutputMask, message){
 	//open filter image
-	setBatchMode(true);
 	openImages = getList("image.titles");
 	if (openImages.length == 0) {
 		open(pathToFilter);
@@ -192,6 +191,11 @@ function generateMask(pathToFilter, pathOutputMask, message){
 	lzz = min(lz, lt);
 	ltt = max(lz, lt);
 	I = lc * lzz * ltt;
+	if (I == 1) {
+		Dialog.create("WARNING");
+		Dialog.addMessage("You selected a single image for analysis. For a more reliable analysis \n select an image stack.");
+		Dialog.show();
+	}
 	run('8-bit');
 	// use maximum projection of filter image to select ROI
 	if (I > 1) {
@@ -245,9 +249,6 @@ function preprocessImage(filename, pathOutputImages) {
 	ltt = max(lz, lt);
 	I = lc * lzz * ltt;
 	if (I == 1) {
-		Dialog.create("WARNING");
-		Dialog.addMessage("You selected a single image for analysis. For a more reliable analysis \n select an image stack.");
-		Dialog.show();
 		preprocessSingleImage(filename, pathOutputImages);
 	} else {
 		preprocessImageStack(filename, pathOutputImages, I);
@@ -448,7 +449,7 @@ function mainMenu() {
 				}
 			}
 			if (imageList.length == counter) {
-				Dialog.create("WARNING");
+				Dialog.create("ERROR");
 				Dialog.addMessage("Non of the files inside the selected folder \ncontained tif images to process.");
 				Dialog.show();
 			}
@@ -487,6 +488,7 @@ function mainMenu() {
 
 		// redrawing mask
 		if (choiceStep == "Redraw mask") {
+			setBatchMode(true);
 			Dialog.create("CytoSeg - Settings");
 			Dialog.addMessage("Do you want to process a single image or all images in a folder ?");
 			itemsProcess = newArray("single", "all");
@@ -723,7 +725,7 @@ function mainMenu() {
 					}
 				}
 				if (imageList.length == counter) {
-					Dialog.create("WARNING");
+					Dialog.create("ERROR");
 					Dialog.addMessage("Non of the files inside the selected folder \ncontained tif images to process.");
 					Dialog.show();
 				}
