@@ -148,12 +148,12 @@ class GaugingGui:
                     if os.path.exists(self.filenameSplit + "_mask.tif"):
                         self.displaySkeleton(self.past)
                     else:
-                        messagebox.showinfo("Warning", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
+                        messagebox.showinfo("ERROR", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
             else:
                 if os.path.exists(self.filename[:-11] + "_mask.tif"):
                     self.displaySkeleton(self.past)
                 else:
-                    messagebox.showinfo("Warning", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
+                    messagebox.showinfo("ERROR", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
         else:
             if self.filename == "":
                 self.filename = filedialog.askopenfilename(initialdir = self.lastdir, title ="Select image!",filetypes = [("tif images","*.tif")])
@@ -164,12 +164,12 @@ class GaugingGui:
                         if os.path.exists(self.filenameSplit + "_mask.tif"):
                             self.displayImage()
                         else:
-                            messagebox.showinfo("Warning", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
+                            messagebox.showinfo("ERROR", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
                 else:
                     if os.path.exists(self.filename[:-11] + "_mask.tif"):
                         self.displayImage()
                     else:
-                        messagebox.showinfo("Warning", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
+                        messagebox.showinfo("ERROR", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
                         self.filename = ""
             else:
                 self.imagename = self.filename.split(self.slash)[-1]
@@ -177,7 +177,7 @@ class GaugingGui:
                 if os.path.exists(self.filename[:-11] + "_mask.tif"):
                     self.displayImage()
                 else:
-                    messagebox.showinfo("Warning", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
+                    messagebox.showinfo("ERROR", "No mask was found for the image you selected for parameter gauging. You can create a mask by choosing 'Select specific CytoSeg step' and 'Redraw mask'.")
                     self.filename = ""
 
     # message that pops up when clicking Help
