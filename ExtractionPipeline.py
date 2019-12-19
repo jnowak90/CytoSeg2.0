@@ -51,7 +51,7 @@ class CytoSeg:
         self.filterImg = glob.glob('*_filter.tif')
 
         if len(self.filterImg) == 0:
-            print("WARNING: No pre-processed image ('*_filter.tif') was found. Select pre-processing to create the image.")
+            print("ERROR: No pre-processed image ('*_filter.tif') was found. Select pre-processing to create the pre-processed image.")
         else:
             self.imgRaw = skimage.io.imread(self.filterImg[0], plugin='tifffile')
             if len(self.imgRaw.shape) > 2:
@@ -76,7 +76,7 @@ class CytoSeg:
                 self.imgGaussian = skimage.filters.gaussian(self.imgSlice, self.sigma)
                 self.imgTube, self.imgSkeleton = utils.skeletonize_graph(self.imgGaussian, self.mask, self.sigma, self.block, self.small, self.factr)
                 if np.sum(self.imgSkeleton) == 0:
-                    print("WARNING: No skeleton was extracted from the selected image. Check the parameters and try again.")
+                    print("ERROR: No skeleton was extracted from the selected image. Check the parameters and try again.")
                 else:
                     self.imgNodes = utils.node_graph(self.imgSkeleton > 0, self.imgGaussian)
 
