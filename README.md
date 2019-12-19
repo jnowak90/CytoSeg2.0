@@ -143,8 +143,26 @@ properties.head()
 ## Troubleshooting
 In case of errors, here are some suggestions on how to fix them.
 
-### The plugin works, but the gauging GUI is not opening and the extraction is not working
-Check if you added the correct Python path when prompted at the beginning. You can test if your python path is working by opening a terminal (Linux, MacOs) or the CMD (Windows) and typing the following:
+### After entering the Python 3 path, the same dialog to input the path appears
+The Python path you entered is not correct. 
+To find the correct Python path you can do the following:
+
+**MacOS/Linux:**
+Open the terminal and type:
+```console
+foo@bar:~$ which python
+/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5
+```
+
+**Windows:**
+Open the CMD (type CMD in search box) and type:
+```console
+foo@bar> where py
+C:\Windows\py.exe
+```
+
+If you have multiple versions of Python installed, make sure that you are looking for the right version (e.g. python3.5).
+You can test if your python path is working by opening a terminal (Linux, MacOs) or the CMD (Windows) and typing the following:
 ```bash
 YOURPYTHONPATH -c "print('Hello World')"
 ```
