@@ -61,7 +61,7 @@ If you selected to do the complete analysis, you will be guided trough different
       
 *Pre-processing:*
 
-   Select a name for the output folder, the current date will be suggested otherwise for the output folder. You can also decide whether to continue in silent mode, which will repress the intermediate pre-processing steps (default). Furthermore, you can decide if you want to analyse a single image or multiple images, which you have to select afterwards. Fiji will start pre-processing and you have to select the region of interset (ROI) for all images and click 'OK'. If you turned of the silent mode, select the ROI from the top image (*MAX_\*_.tif*). The pre-processed image and the mask with the selected ROI will be saved in the output folder (as '\*\_filter.tif' and '\*\_mask.tif', respectively, see Output).
+   Select a name for the output folder, the current date will be suggested otherwise for the output folder. You can also decide whether to continue in silent mode, which will repress the intermediate pre-processing steps (default). Furthermore, you can decide if you want to analyse a single image or multiple images, which you have to select afterwards. Fiji will start pre-processing and you have to select the region of interset (ROI) for all images and click 'OK'. If you turned of the silent mode, select the ROI from the top image (*MAX_ \* _.tif*). The pre-processed image and the mask with the selected ROI will be saved in the output folder (as '\*\_filter.tif' and '\*\_mask.tif', respectively, see Output).
  
 *Gauging:*
 
