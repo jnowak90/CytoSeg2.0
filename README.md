@@ -184,5 +184,6 @@ Move the Fiji application into the Applications folder.
 First, make sure that you have the following Fiji settings:
    - white as Foreground and black as Background (Edit > Options > Colors...)
    - set a tick for "Black Background" (Binary > Options)
+
 Furthermore, you have to enable the "Mean" in the Measurement settings (Analyze > Set Measurements...).
 
