@@ -3,8 +3,8 @@ import platform
 import os
 
 
-# This funciton will extract the network from the already preprocessed file in '/DemoImages/Extraction/output/actin_control' and the already 
-# drawn mask which is already stored in the same location. 
+# This funciton will extract the network from the already preprocessed file in '/DemoImages/Extraction/output/actin_control' and the corresponding
+# mask which is stored in the same location. 
 def test_extraction():
     if platform.system() != "Linux":
         print("Test might not work on Windows")
