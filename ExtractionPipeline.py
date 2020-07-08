@@ -199,4 +199,5 @@ class CytoSeg:
             np.save(self.pathToFolder + '/randomGraphPositions.npy', randomPositions)
             df.to_csv(self.pathToFolder + '/randomGraphProperties.csv', sep=';', encoding='utf-8', index=False)
             nx.write_gpickle(randomGraphs, self.pathToFolder + '/randomGraphs.gpickle')
-myExtraction = CytoSeg(sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3])
+if __name__=="__main__":
+    myExtraction = CytoSeg(sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3])

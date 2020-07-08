@@ -264,7 +264,25 @@ class GaugingGui:
 
             fig, ax = plt.subplots(1, 1)
             plt.imshow(firstImage, cmap='gray_r')
-            binarySkeletonImage = np.ma.masked_where(skeletonImage == 0, skeletonImage)
+            
+            # Here the skeleton is enlarged by a pixel.
+            # This allows the use of newer versions of matplotlib as well since objects of 1-pixel size might not be displayed.
+            def bounds(x, xMin, xMax):
+                if (x < xMin):
+                    x = xMin
+                elif (x > xMax):
+                    x = xMax
+                return(x)
+
+            dimensionY, dimensionX = skeletonImage.shape
+            crisp = skeletonImage.copy()
+            for posX in range(dimensionX):
+                for posY in range(dimensionY):
+                    if skeletonImage[posY,posX]==1:
+                        xMin, xMax, yMin, yMax = bounds(posX - 1, 0, dimensionX), bounds(posX + 2, 0, dimensionX), bounds(posY - 1, 0, dimensionY), bounds(posY + 2, 0, dimensionY)
+                        crisp[yMin:yMax, xMin:xMax]=np.ones_like(crisp[yMin:yMax, xMin:xMax])
+            binarySkeletonImage = np.ma.masked_where(crisp == 0, crisp)
+
             plt.imshow(binarySkeletonImage, cmap='autumn')
             plt.axis('off')
             textstr = '\n'.join((
@@ -294,9 +312,7 @@ class GaugingGui:
                     self.resized = self.img.resize((int(self.min), self.imageHeight), Image.ANTIALIAS)
             self.image = ImageTk.PhotoImage(self.resized)
             self.canvas.create_image(0, 0, anchor=NW, image=self.image)
-
-
-
-master = Tk()
-my_gui = GaugingGui(master, sys.argv[0], sys.argv[1], sys.argv[2])
-master.mainloop()
+if __name__=='__main__':    
+    master = Tk()
+    my_gui = GaugingGui(master, sys.argv[0], sys.argv[1], sys.argv[2])
+    master.mainloop()
