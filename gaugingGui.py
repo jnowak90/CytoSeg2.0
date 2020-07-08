@@ -295,8 +295,7 @@ class GaugingGui:
             self.image = ImageTk.PhotoImage(self.resized)
             self.canvas.create_image(0, 0, anchor=NW, image=self.image)
 
-
-
-master = Tk()
-my_gui = GaugingGui(master, sys.argv[0], sys.argv[1], sys.argv[2])
-master.mainloop()
+if __name__=='__main__':    
+    master = Tk()
+    my_gui = GaugingGui(master, sys.argv[0], sys.argv[1], sys.argv[2])
+    master.mainloop()
