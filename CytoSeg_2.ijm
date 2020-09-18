@@ -177,6 +177,7 @@ function replaceFileFormat(filename) {
 	newFilename =replace(newFilename, ".TIF", "");
 	newFilename =replace(newFilename, ".tiff", "");
 	newFilename =replace(newFilename, ".TIFF", "");
+	newFilename = replace(newFilename, " ", "_");
 	return newFilename;
 }
 
