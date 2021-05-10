@@ -323,7 +323,7 @@ function selectPythonPath(pathToCytoSeg) {
 /////////////////////
 ///// VARIABLES /////
 getDateAndTime(year, month, dayOfWeek, dayOfMonth, hour, minute, second, msec);
-var month = month + 1;    			// bug of the getDateAndTime function, month start with 0
+//var month = month + 1;    			// bug of the getDateAndTime function, month start with 0
 var randn = 1;
 var sigma = 2.0;
 var block = 101.0;
