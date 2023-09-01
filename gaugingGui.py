@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import Tk, Label, Button
 from tkinter import messagebox
 from tkinter import filedialog
+import PIL
 from PIL import Image, ImageTk
 import os
 import sys
