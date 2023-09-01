@@ -264,8 +264,11 @@ class GaugingGui:
 
             fig, ax = plt.subplots(1, 1)
             plt.imshow(firstImage, cmap='gray_r')
-            binarySkeletonImage = np.ma.masked_where(skeletonImage == 0, skeletonImage)
-            plt.imshow(binarySkeletonImage, cmap='autumn')
+            #binarySkeletonImage = np.ma.masked_where(skeletonImage == 0, skeletonImage)
+            #plt.imshow(binarySkeletonImage, cmap='autumn')
+            cmapBinary = matplotlib.colors.ListedColormap([[1.0, 1.0, 1.0, 0.0], [1.0, 0.0, 0.0, 1.0]])
+            dilatedImage = skimage.morphology.binary_dilation(skeletonImage)
+            plt.imshow(dilatedImage == 1, cmap=cmapBinary, alpha=0.5)
             plt.axis('off')
             textstr = '\n'.join((
             r'$v_{width}=%.2f$' % (sigma, ),
