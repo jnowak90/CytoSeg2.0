@@ -209,14 +209,23 @@ class GaugingGui:
     def displayImage(self):
         self.img = Image.open(self.filename)
         if self.img.size[0] == self.img.size[1]:
-            self.resized = self.img.resize((self.imageHeight, self.imageHeight),Image.ANTIALIAS)
+            if Version(PIL.__version__) < Version('2.7.0'):
+                self.resized = self.img.resize((self.imageHeight, self.imageHeight),Image.ANTIALIAS)
+            else:
+                self.resized = self.img.resize((self.imageHeight, self.imageHeight),Image.LANCZOS)
         else:
             self.max, self.argmax = np.max(self.img.size), np.argmax(self.img.size)
             self.min = (np.min(self.img.size) * self.imageHeight) / self.max
             if self.argmax == 0:
-                self.resized = self.img.resize((self.imageHeight, int(self.min)), Image.ANTIALIAS)
+                if Version(PIL.__version__) < Version('2.7.0'):
+                    self.resized = self.img.resize((self.imageHeight, int(self.min)), Image.ANTIALIAS)
+                else:
+                    self.resized = self.img.resize((self.imageHeight, int(self.min)), Image.LANCZOS)
             else:
-                self.resized = self.img.resize((int(self.min), self.imageHeight), Image.ANTIALIAS)
+                if Version(PIL.__version__) < Version('2.7.0'):
+                    self.resized = self.img.resize((int(self.min), self.imageHeight), Image.ANTIALIAS)
+                else:
+                    self.resized = self.img.resize((int(self.min), self.imageHeight), Image.LANCZOS)
         self.image = ImageTk.PhotoImage(self.resized)
         self.canvas.create_image(0, 0, anchor=NW, image=self.image)
         if self.filename != "":
@@ -287,14 +296,23 @@ class GaugingGui:
 
             imageHeight = self.height * 0.625
             if self.img.size[0] == self.img.size[1]:
-                self.resized = self.img.resize((self.imageHeight, self.imageHeight), Image.ANTIALIAS)
+                if Version(PIL.__version__) < Version('2.7.0'):
+                    self.resized = self.img.resize((self.imageHeight, self.imageHeight), Image.ANTIALIAS)
+                else:
+                    self.resized = self.img.resize((self.imageHeight, self.imageHeight), Image.LANCZOS)
             else:
                 self.max, self.argmax = np.max(self.img.size), np.argmax(self.img.size)
                 self.min = (np.min(self.img.size) * self.imageHeight)/self.max
                 if self.argmax == 0:
-                    self.resized = self.img.resize((self.imageHeight, int(self.min)), Image.ANTIALIAS)
+                    if Version(PIL.__version__) < Version('2.7.0'):
+                        self.resized = self.img.resize((self.imageHeight, int(self.min)), Image.ANTIALIAS)
+                    else:
+                        self.resized = self.img.resize((self.imageHeight, int(self.min)), Image.LANCZOS)
                 else:
-                    self.resized = self.img.resize((int(self.min), self.imageHeight), Image.ANTIALIAS)
+                    if Version(PIL.__version__) < Version('2.7.0'):
+                        self.resized = self.img.resize((int(self.min), self.imageHeight), Image.ANTIALIAS)
+                    else:
+                        self.resized = self.img.resize((self.imageHeight, int(self.min)), Image.LANCZOS)
             self.image = ImageTk.PhotoImage(self.resized)
             self.canvas.create_image(0, 0, anchor=NW, image=self.image)
 
