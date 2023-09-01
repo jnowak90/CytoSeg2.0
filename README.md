@@ -187,3 +187,39 @@ First, make sure that you have the following Fiji settings:
 
 Furthermore, you have to enable the "Mean" in the Measurement settings (Analyze > Set Measurements...).
 
+### The filtered mimage and the mask were created, but the gaugung GUI and extraction did not work
+Check if you have all necessary Python modules installed. To do so, open Python in the terminal and try to import the modules. Install the modules Python cannot import using pip, etc.
+
+**MacOS/Linux:**
+Open the terminal and type:
+```console
+foo@bar:~$ python
+>>> import numpy
+>>> import matplotlib
+>>> import PIL
+>>> import networkx
+>>> import scipy
+>>> import pandas
+>>> import skimage
+>>> import packaging
+>>> import tkinter
+>>> import shapely
+>>> exit()
+```
+
+**Windows:**
+Open the CMD (type CMD in search box) and type your Python path:
+```console
+foo@bar> C:\Windows\py.exe 
+>>> import numpy
+>>> import matplotlib
+>>> import PIL
+>>> import networkx
+>>> import scipy
+>>> import pandas
+>>> import skimage
+>>> import packaging
+>>> import tkinter
+>>> import shapely
+>>> exit()
+```
