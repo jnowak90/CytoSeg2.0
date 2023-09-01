@@ -278,7 +278,7 @@ class GaugingGui:
             #plt.imshow(binarySkeletonImage, cmap='autumn')
             cmapBinary = matplotlib.colors.ListedColormap([[1.0, 1.0, 1.0, 0.0], [1.0, 0.0, 0.0, 1.0]])
             dilatedImage = skimage.morphology.binary_dilation(skeletonImage)
-            plt.imshow(dilatedImage == 1, cmap=cmapBinary, alpha=0.5)
+            plt.imshow(dilatedImage == 1, cmap=cmapBinary, alpha=0.5, zorder=2)
             plt.axis('off')
             textstr = '\n'.join((
             r'$v_{width}=%.2f$' % (sigma, ),
