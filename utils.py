@@ -690,6 +690,6 @@ def cell_sample(mask, samplingPoints):
     """
     maskedArea = np.array(np.where(mask)).T
     maskedAreaLength = len(maskedArea)
-    randomIndex = sp.random.randint(0, maskedAreaLength, samplingPoints)
-    coordsRandom = maskedArea[randomIndex] + sp.rand(samplingPoints, 2)
+    randomIndex = np.random.randint(0, maskedAreaLength, samplingPoints)
+    coordsRandom = maskedArea[randomIndex] + np.random.rand(samplingPoints, 2)
     return(coordsRandom)
