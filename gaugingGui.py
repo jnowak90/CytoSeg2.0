@@ -273,7 +273,7 @@ class GaugingGui:
             skeletonImage = skeletonize_graph(gaussianImage, mask, sigma, block, small, factr)
 
             fig, ax = plt.subplots(1, 1)
-            plt.imshow(firstImage, cmap='gray_r')
+            plt.imshow(firstImage, cmap='gray_r', zorder=1)
             #binarySkeletonImage = np.ma.masked_where(skeletonImage == 0, skeletonImage)
             #plt.imshow(binarySkeletonImage, cmap='autumn')
             cmapBinary = matplotlib.colors.ListedColormap([[1.0, 1.0, 1.0, 0.0], [1.0, 0.0, 0.0, 1.0]])
