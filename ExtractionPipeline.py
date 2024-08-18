@@ -20,17 +20,18 @@ from skimage import io, filters
 import sys
 import glob
 from collections import Counter
+import pickle
 import utils
 
 class CytoSeg:
 
-    def __init__(self, pathToPlugin, pathToFolder, parameterString, osSystem):
+    def __init__(self, pathToPlugin, pathToFilterImage, parameterString, osSystem):
 
-        self.pathToFolder = pathToFolder
+        self.pathToFilterImage = pathToFilterImage
         self.parameterString = parameterString
         self.osSystem = int(osSystem)
-        self.originalData = []
-        self.randomData = []
+        self.originalGraphs, self.originalProperties = [], []
+        self.randomGraphs, self.randomProperties = [], []
         if self.osSystem == 1:
             self.pathToPlugin = '\\'.join(pathToPlugin.split('\\')[:-1])
         else:
@@ -47,13 +48,14 @@ class CytoSeg:
         self.get_parameters()
 
         # go to selected folder and search filtered image
-        os.chdir(self.pathToFolder)
-        self.filterImg = glob.glob('*_filter.tif')
-
-        if len(self.filterImg) == 0:
+        if '_filter.tif' not in self.pathToFilterImage:
             print("ERROR: No pre-processed image ('*_filter.tif') was found. Select pre-processing to create the pre-processed image.")
         else:
-            self.imgRaw = skimage.io.imread(self.filterImg[0], plugin='tifffile')
+            if self.osSystem == 0:
+                self.pathToFolder = ('/').join(self.pathToFilterImage.split('/')[:-1]) + '/'
+            else:
+                self.pathToFolder = ('\\').join(self.pathToFilterImage.split('\\')[:-1]) + '\\'
+            self.imgRaw = skimage.io.imread(self.pathToFilterImage, plugin='tifffile')
             if len(self.imgRaw.shape) > 2:
                 if self.imgRaw.shape[2] in (3, 4):
                     self.imgRaw = np.swapaxes(self.imgRaw, -1, -3)
@@ -63,10 +65,13 @@ class CytoSeg:
                 self.slices = 1
 
             # find and open image mask
-            self.maskImg = glob.glob('*_mask.tif')
-            self.mask = skimage.io.imread(self.maskImg[0], plugin='tifffile') > 0
+            if self.osSystem == 0:
+                self.maskImg = ('_').join(self.pathToFilterImage.split('/')[-1].split('_')[:-1])
+            else:
+                self.maskImg = ('_').join(self.pathToFilterImage.split('\\')[-1].split('_')[:-1])
+            self.mask = skimage.io.imread(self.pathToFolder + self.maskImg + '_mask.tif', plugin='tifffile') > 0
 
-            print('Start extraction of image', self.filterImg[0])
+            print('Start extraction of image')
             for i in range(self.slices):
                 print('\n' , i+1, 'of', self.slices)
                 if self.slices == 1:
@@ -81,21 +86,24 @@ class CytoSeg:
                     self.imgNodes = utils.node_graph(self.imgSkeleton > 0, self.imgGaussian)
 
                     self.originalGraph, self.originalPosition = utils.make_graph(self.imgNodes, self.imgGaussian)
-                    self.originalNormalizedGraph, self.originalProperties, self.unifiedGraph = self.processGraph(self.originalGraph, self.originalPosition, self.imgGaussian, self.mask)
-                    self.originalData.append([i, self.originalNormalizedGraph, self.originalPosition, self.originalProperties])
+                    self.originalNormalizedGraph, self.originalProps, self.unifiedGraph = self.processGraph(self.originalGraph, self.originalPosition, self.imgGaussian, self.mask, i)
+                    self.originalGraphs.append(self.originalNormalizedGraph)
+                    self.originalProperties.append(self.originalProps)
 
-                    for r in range(self.randn):
-                        self.randomGraph, self.randomPosition = utils.randomize_graph(self.unifiedGraph, self.originalPosition, self.mask)
-                        self.randomNormalizedGraph, self.randomProperties, _ = self.processGraph(self.randomGraph, self.randomPosition, self.imgGaussian, self.mask)
-                        self.randomData.append([i, self.randomNormalizedGraph, self.randomPosition, self.randomProperties])
+                    if self.randn != 0:
+                        for r in range(self.randn):
+                            self.randomGraph, self.randomPosition = utils.randomize_graph(self.unifiedGraph, self.originalPosition, self.mask)
+                            self.randomNormalizedGraph, self.randomProps, _ = self.processGraph(self.randomGraph, self.randomPosition, self.imgGaussian, self.mask, r)
+                            self.randomGraphs.append(self.randomNormalizedGraph)
+                            self.randomProperties.append(self.randomProps)
 
                     if i==0:
                         print('Export plot.')
-                        self.plotSkeleton(self.originalData, self.randomData)
+                        self.plotSkeleton(self.originalGraphs, self.randomGraphs)
 
             if np.sum(self.imgSkeleton) != 0:
                 print('\nExport data.')
-                self.saveData(self.originalData, self.randomData)
+                self.saveData(self.originalGraphs, self.randomGraphs, self.originalProperties, self.randomProperties)
 
     # save the selected parameters in a file
     def get_parameters(self):
@@ -105,21 +113,24 @@ class CytoSeg:
         else:
             np.savetxt(self.pathToPlugin + "/defaultParameter.txt", [params], fmt='%s')
 
-    def processGraph(self, graph, graphPosition, Gaussian, mask):
+    def processGraph(self, graph, graphPosition, Gaussian, mask, index):
         self.unifiedGraph = utils.unify_graph(graph)
         self.connectedGraph = utils.connect_graph(self.unifiedGraph, graphPosition, Gaussian)
         self.centralizedGraph = utils.centralize_graph(self.connectedGraph)
         self.normalizedGraph = utils.normalize_graph(self.centralizedGraph)
-        self.graphProperties = utils.compute_graph(self.normalizedGraph, graphPosition, mask)
+        self.graphProperties = utils.compute_graph(self.normalizedGraph, graphPosition, mask, index)
         return(self.normalizedGraph, self.graphProperties, self.unifiedGraph)
 
     def most_frequent(self, List):
         occurence_count = Counter(List)
         return occurence_count.most_common(1)[0][0]
 
-    def plotSkeleton(self, originalData, randomData):
-            originalGraph, originalPosition = originalData[0][1], originalData[0][2]
-            randomGraph, randomPosition = randomData[0][1], randomData[0][2]
+    def plotSkeleton(self, originalGraphs, randomGraphs):
+            originalGraph = originalGraphs[0]
+            originalPosition = nx.get_node_attributes(originalGraph, 'pos')
+            if self.randn != 0:
+                randomGraph = randomGraphs[0]
+                randomPosition = nx.get_node_attributes(randomGraph, 'pos')
 
             if self.most_frequent(self.imgRaw[0].flatten()) <= 128:
                 cmapImage = 'gray_r'
@@ -149,54 +160,50 @@ class CytoSeg:
             else:
                 ax2.imshow(self.imgRaw[0], cmap=cmapImage)
             ax2.set_title('Randomized actin network', fontsize=7)
-            randomEdgeCapacity = 1.0 * np.array([property['capa'] for node1, node2, property in randomGraph.edges(data=True)])
-            nx.draw_networkx_edges(randomGraph, randomPosition, edge_color=plt.cm.plasma(randomEdgeCapacity / randomEdgeCapacity.max()), width=1.2, ax=ax2)
-            divider = make_axes_locatable(ax2)
-            cax2 = divider.append_axes("right", size="5%", pad=0.05)
-            m2 = plt.cm.ScalarMappable(cmap="plasma")
-            m2.set_array(randomEdgeCapacity)
-            cbar2 = fig.colorbar(m2, cax=cax2)
-            cbar2.ax.tick_params(labelsize=7)
+            if self.randn != 0:
+                randomEdgeCapacity = 1.0 * np.array([property['capa'] for node1, node2, property in randomGraph.edges(data=True)])
+                nx.draw_networkx_edges(randomGraph, randomPosition, edge_color=plt.cm.plasma(randomEdgeCapacity / randomEdgeCapacity.max()), width=1.2, ax=ax2)
+                divider = make_axes_locatable(ax2)
+                cax2 = divider.append_axes("right", size="5%", pad=0.05)
+                m2 = plt.cm.ScalarMappable(cmap="plasma")
+                m2.set_array(randomEdgeCapacity)
+                cbar2 = fig.colorbar(m2, cax=cax2)
+                cbar2.ax.tick_params(labelsize=7)
             ax2.axes.get_yaxis().set_visible(False)
             ax2.axes.get_xaxis().set_visible(False)
 
             plt.tight_layout(h_pad=1)
 
             if self.osSystem == 1:
-                fig.savefig(self.pathToFolder + "\\ExtractedNetworks.png", box_inches="tight", dpi=300)
+                fig.savefig(self.pathToFolder + "\\ExtractedNetworks.png", bbox_inches="tight", dpi=300)
             else:
-                fig.savefig(self.pathToFolder + "/ExtractedNetworks.png", box_inches="tight", dpi=300)
+                fig.savefig(self.pathToFolder + "/ExtractedNetworks.png", bbox_inches="tight", dpi=300)
 
-    def saveData(self, originalData, randomData):
+    def saveData(self, originalGraphs, randomGraphs, originalProperties, randomProperties):
         properties = ['time', '# nodes', '# edges', '# connected components', 'avg. edge capacity', 'assortativity', 'avg. path length', 'CV path length', 'algebraic connectivity', 'CV edge angles', 'crossing number']
 
         # original graphs
-        originalPositions = np.array([np.hstack([d[2]]) for d in originalData])
-        originalProperties = np.array([np.hstack([d[0], d[-1]]) for d in originalData])
-        originalGraphs = [d[1] for d in originalData]
         df = pd.DataFrame(originalProperties, columns=properties)
         df = df.astype(dtype={'time' : 'int32', '# nodes': 'int32', '# edges' : 'int32', '# connected components' : 'int32', 'avg. edge capacity' : 'float', 'assortativity' : 'float', 'avg. path length' : 'float', 'CV path length' : 'float', 'algebraic connectivity' : 'float', 'CV edge angles' : 'float', 'crossing number' : 'float'})
         if self.osSystem == 1:
-            np.save(self.pathToFolder + '\\originalGraphPositions.npy', originalPositions)
-            df.to_csv(self.pathToFolder + '\\originalGraphProperties.csv', sep=';', encoding='utf-8', index=False)
-            nx.write_gpickle(originalGraphs, self.pathToFolder + '\\originalGraphs.gpickle')
+            df.to_csv(self.pathToFolder + '\\originalGraphProperties.csv', sep=';', decimal=',', encoding='utf-8', index=False)
+            with open (self.pathToFolder + '\\originalGraphs.gpickle', 'wb') as f:
+                pickle.dump(originalGraphs, f, pickle.HIGHEST_PROTOCOL)
         else:
-            np.save(self.pathToFolder + '/originalGraphPositions.npy', originalPositions)
             df.to_csv(self.pathToFolder + '/originalGraphProperties.csv', sep=';', encoding='utf-8', index=False)
-            nx.write_gpickle(originalGraphs, self.pathToFolder + '/originalGraphs.gpickle')
+            with open (self.pathToFolder + '/originalGraphs.gpickle', 'wb') as f:
+                pickle.dump(originalGraphs, f, pickle.HIGHEST_PROTOCOL)
 
         # random graphs
-        randomPositions = np.array([np.hstack([d[2]]) for d in randomData])
-        randomProperties = np.array([np.hstack([d[0], d[-1]]) for d in randomData])
-        randomGraphs = [d[1] for d in randomData]
-        df = pd.DataFrame(randomProperties, columns=properties)
-        df = df.astype(dtype={'time' : 'int32', '# nodes': 'int32', '# edges' : 'int32', '# connected components' : 'int32', 'avg. edge capacity' : 'float', 'assortativity' : 'float', 'avg. path length' : 'float', 'CV path length' : 'float', 'algebraic connectivity' : 'float', 'CV edge angles' : 'float', 'crossing number' : 'float'})
+        if self.randn != 0:
+            df = pd.DataFrame(randomProperties, columns=properties)
+            df = df.astype(dtype={'time' : 'int32', '# nodes': 'int32', '# edges' : 'int32', '# connected components' : 'int32', 'avg. edge capacity' : 'float', 'assortativity' : 'float', 'avg. path length' : 'float', 'CV path length' : 'float', 'algebraic connectivity' : 'float', 'CV edge angles' : 'float', 'crossing number' : 'float'})
         if self.osSystem == 1:
-            np.save(self.pathToFolder + '\\randomGraphPositions.npy', randomPositions)
-            df.to_csv(self.pathToFolder + '\\randomGraphProperties.csv', sep=';', encoding='utf-8', index=False)
-            nx.write_gpickle(randomGraphs, self.pathToFolder + '\\randomGraphs.gpickle')
+            df.to_csv(self.pathToFolder + '\\randomGraphProperties.csv', sep=';', decimal=',', encoding='utf-8', index=False)
+            with open (self.pathToFolder + '\\randomGraphs.gpickle', 'wb') as f:
+                pickle.dump(originalGraphs, f, pickle.HIGHEST_PROTOCOL)
         else:
-            np.save(self.pathToFolder + '/randomGraphPositions.npy', randomPositions)
             df.to_csv(self.pathToFolder + '/randomGraphProperties.csv', sep=';', encoding='utf-8', index=False)
-            nx.write_gpickle(randomGraphs, self.pathToFolder + '/randomGraphs.gpickle')
+            with open (self.pathToFolder + '/randomGraphs.gpickle', 'wb') as f:
+                pickle.dump(originalGraphs, f, pickle.HIGHEST_PROTOCOL)
 myExtraction = CytoSeg(sys.argv[0], sys.argv[1], sys.argv[2], sys.argv[3])
