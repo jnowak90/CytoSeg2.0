@@ -11,7 +11,7 @@ import numpy as np
 import skimage
 from skimage import filters, morphology, feature, segmentation, draw
 import scipy as sp
-from scipy import ndimage, linalg, spatial, random
+from scipy import ndimage, linalg, spatial
 from packaging.version import Version
 import networkx as nx
 import random
@@ -209,7 +209,9 @@ def make_graph(imageAnnotated, imageGaussian):
                 edgeConnectivity  = 0
                 edgeJump = 0
                 graph.add_edge(node1, node2, edist=nodeDistance, fdist=filamentLengthSum, weight=minimumEdgeWeight, capa=edgeCapacity, lgth=edgeLength, conn=edgeConnectivity, jump=edgeJump)
-    return(graph, nodePositions)
+    attrPos = {k: list(nodePositions[k] for k in range(len(nodePositions))}
+    nx.set_node_attributes(graph, attrPos, 'pos')
+    return(graph, attrPos)
 
 def bounds(x, xMin, xMax):
     """Restrict number to interval.
@@ -284,6 +286,7 @@ def unify_graph(graph):
                 simpleGraph[node1][node2]['lgth'] = lgth
         else:
             simpleGraph.add_edge(node1, node2, edist=edist, fdist=fdist, weight=weight, capa=capa, lgth=lgth, conn=conn, jump=jump, multi=multi)
+    nx.set_node_attributes(simpleGraph, nx.get_node_attributes(graph, 'pos'), 'pos')
     return(simpleGraph)
 
 def connect_graph(graph, nodePositions, imageGaussian):
@@ -300,7 +303,8 @@ def connect_graph(graph, nodePositions, imageGaussian):
     graphConnected : connect graph
 
     """
-    distanceMatrix = sp.spatial.distance_matrix(nodePositions, nodePositions)
+    nodePositionsArray = list(nodePositions.values())
+    distanceMatrix = sp.spatial.distance_matrix(nodePositionsArray, nodePositionsArray)
     graphConnected = graph.copy()
     nodeNumber = graphConnected.number_of_nodes()
     connectedComponents = nx.connected_components(graphConnected)
@@ -311,8 +315,8 @@ def connect_graph(graph, nodePositions, imageGaussian):
         remainingNodes = list(set(range(nodeNumber)).difference(component))
         distancesBetweenComponents = distanceMatrix[componentNodes][:, remainingNodes]
         selectedComponentNode, selectedRemainingNode = np.unravel_index(distancesBetweenComponents.argmin(), distancesBetweenComponents.shape)
-        positionComponentNode, positionRemainingNode = nodePositions[componentNodes][selectedComponentNode], nodePositions[remainingNodes][selectedRemainingNode]
-        edgeDistance = sp.linalg.norm(positionComponentNode - positionRemainingNode)
+        positionComponentNode, positionRemainingNode = nodePositions[componentNodes[selectedComponentNode]], nodePositions[remainingNodes[selectedRemainingNode]]
+        edgeDistance = sp.linalg.norm(np.array(positionComponentNode) - np.array(positionRemainingNode))
         edgeDistance = max(1.0, edgeDistance)
         filamentLength = 1.0 * np.ceil(edgeDistance)
         edgeDefiningNodes = np.array([positionComponentNode[0], positionComponentNode[1], positionRemainingNode[0], positionRemainingNode[1]])
@@ -424,7 +428,7 @@ def normalize_graph(graph):
         property['npr'] = npr[index]
     return(graph)
 
-def compute_graph(graph, nodePositions, mask):
+def compute_graph(graph, nodePositions, mask, index):
     """Compute graph properties.
 
     Parameters
@@ -456,7 +460,7 @@ def compute_graph(graph, nodePositions, mask):
     edgeAnglesCV = 1.0 * edgeAnglesSD / edgeAnglesMean
     edgeCrossings = crossing_number(graph, nodePositions)
     edgeCrossingsMean = np.nanmean(edgeCrossings)
-    properties = [nodeNumber, edgeNumber, connectedComponentsNumber, bundling, assortativity, reachability, shortestPathLengthCV, algebraicConnectivity, edgeAnglesCV, edgeCrossingsMean]
+    properties = [index, nodeNumber, edgeNumber, connectedComponentsNumber, bundling, assortativity, reachability, shortestPathLengthCV, algebraicConnectivity, edgeAnglesCV, edgeCrossingsMean]
     return(properties)
 
 def connected_components(graph):
@@ -517,7 +521,7 @@ def edge_angles(graph, nodePositions, mask):
     coordinateCellAxis1, coordinateCellAxis2, centerPointAxis, directionVector, cellAxisAngle, rotationMatrix = mask2rot(mask)
     edgeAngles = []
     for node1, node2, property in graph.edges(data=True):
-        edgeAngles.append(np.mod(angle360(1.0 * (nodePositions[node1] - nodePositions[node2])) + 360.0 - cellAxisAngle, 180.0))
+        edgeAngles.append(np.mod(angle360(1.0 * (np.array(nodePositions[node1]) - np.array(nodePositions[node2]))) + 360.0 - cellAxisAngle, 180.0))
     return(edgeAngles)
 
 def crossing_number(graph, nodePositions):
@@ -646,7 +650,7 @@ def randomize_graph(graph, nodePositions, mask, planar=0, iterations=1000):
             for candidate in selectedCandidates:
                 node1 = candidateNodes[0][candidate]
                 node2 = candidateNodes[1][candidate]
-                edgeBetweenNodes = np.array([[nodePositionsRandom[node1][0], nodePositionsRandom[node2][0]], [nodePositionsRandom[node1][1], nodePositions[node2][1]]]).T
+                edgeBetweenNodes = np.array([[nodePositionsRandom[node1][0], nodePositionsRandom[node2][0]], [nodePositionsRandom[node1][1], nodePositionsRandom[node2][1]]]).T
                 crossingsOfEdges = planar * multi_line_intersect(np.array(edgeBetweenNodes), np.array(addedEdges)).sum()
                 if (crossingsOfEdges < edgeCrossings and edgeBinsRandom[node1, node2] >= 0):
                     edgeCrossings = crossingsOfEdges
@@ -671,8 +675,10 @@ def randomize_graph(graph, nodePositions, mask, planar=0, iterations=1000):
         for index, (node1, node2, properties) in enumerate(randomizedGraph.edges(data=True)):
             for key in properties.keys():
                 properties[key] = edgeProperties[index][key]
-        nodePositionsRandom = nodePositions
-    return(randomizedGraph, nodePositionsRandom)
+        nodePositionsRandom = np.array(nodePositions.values())
+    attrPos = {k: list(nodePositionsRandom[k]) for k in range(len(nodePositionsRandom))}
+    nx.set_node_attributes(randomizedGraph, attrPos, 'pos')
+    return(randomizedGraph, attrPos)
 
 
 def cell_sample(mask, samplingPoints):
