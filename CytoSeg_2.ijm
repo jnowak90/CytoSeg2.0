@@ -295,14 +295,14 @@ function preprocessSingleImage(filename, pathOutputImages) {
 }
 
 // call a python script which is inside the fiji.app/plugins/Cyto_Seg folder (a bridge bash script needed to execute the python script in python3, otherwise fiji uses python2)
-function pythonGraphAnalysis(pathToPython3, pathToFolder, parameters){
+function pythonGraphAnalysis(pathToPython3, pathToFilterImage, parameters){
 	if (startsWith(osSystem, "Windows")) {
 		pathToPostprocessing = getDirectory("plugins") + "CytoSeg\\ExtractionPipeline.py";
-		exec("cmd /c " + pathToPython3 + " " + pathToPostprocessing + " " + pathToFolder + " " + parameters + " 1");
+		exec("cmd /c " + pathToPython3 + " " + pathToPostprocessing + " " + pathToFilterImage + " " + parameters + " 1");
 	} else {
 		pathToPlugin = getDirectory("plugins") + "CytoSeg/bridge.sh";
 		pathToPostprocessing = getDirectory("plugins") + "CytoSeg/ExtractionPipeline.py";
-		exec('sh', pathToPlugin, pathToPython3, pathToPostprocessing, pathToFolder ,parameters, "0");
+		exec('sh', pathToPlugin, pathToPython3, pathToPostprocessing, pathToFilterImage ,parameters, "0");
 	}
 }
 
@@ -405,16 +405,20 @@ function mainMenu() {
 			Dialog.addMessage("Before starting the network extraction, the right \nparameters have to be selected for the images.");
 			Dialog.show();
 			if (startsWith(osSystem, "Windows")) {
-				exec("cmd /c " + pathToPython3 + " " + pathToGUI + " " + pathOutputImages + " 1");
+				exec("cmd /c " + pathToPython3 + " " + pathToGUI + " " + pathOutputImages + "\\" + newFilename + "_filter.tif" + " 1");
 			} else {
-				exec("sh", pathToBridge, pathToPython3, pathToGUI, pathOutputImages, "0");
+				exec("sh", pathToBridge, pathToPython3, pathToGUI, pathOutputImages + "/" + newFilename + "_filter.tif", "0");
 			}
 			updateParameters();
 			parameters = "" + randn + "," + sigma + "," + block + "," + small + "," + factr;
 			print("Used parameters for network extraction: \nv_width: " + sigma + "\nv_thres: " + block + "\nv_size: " + small + "\nv_int: " + factr);
 			print("\n#########################################\n\nNetwork extraction in progress...\n");
 			// network extraction
-			pythonGraphAnalysis(pathToPython3, pathOutputImages, parameters);
+			if (startsWith(osSystem, "Windows")) {
+				pythonGraphAnalysis(pathToPython3, pathOutputImages + "//" + newFilename + "_filter.tif", parameters);
+			} else {
+			    pythonGraphAnalysis(pathToPython3, pathOutputImages + "/" + newFilename + "_filter.tif", parameters);
+			}
 			print("\n#########################################\n\nAnalysis done.\n");	
 		}
 		// multiple images
@@ -436,8 +440,10 @@ function mainMenu() {
 						preprocessImage(filename, pathOutputImages);
 						if (startsWith(osSystem, "Windows")) {
 							generateMask(imageList[i], pathOutputImages + "\\" + filename + "_mask.tif", messageROI);
+							array = newArray(pathOutputImages + "\\" + filename + "_filter.tif");
 						} else {
 							generateMask(imageList[i], pathOutputImages + "/" + filename + "_mask.tif", messageROI);
+							array = newArray(pathOutputImages + "/" + filename + "_filter.tif");
 						}
 						array = newArray(pathOutputImages);
 						extractionArray = Array.concat(extractionArray, array);
@@ -649,7 +655,11 @@ function mainMenu() {
 				// network extraction
 				if (selectedProcess != "Pre-processing only") {
 					print("\n#########################################\n\nNetwork extraction in progress...\n");
-					pythonGraphAnalysis(pathToPython3, pathOutputImages, parameters);
+					if (startsWith(osSystem, "Windows")) {
+						pythonGraphAnalysis(pathToPython3, pathOutputImages + "\\" + newFilename + "_filter.tif", parameters);
+					} else {
+						pythonGraphAnalysis(pathToPython3, pathOutputImages + "/" + newFilename + "_filter.tif", parameters);
+					}
 				}
 
 				print("\n#########################################\n\nAnalysis done.\n");			
@@ -684,8 +694,12 @@ function mainMenu() {
 								}
 							}
 								if (selectedProcess != "Pre-processing only") {
-									array = newArray(pathOutputImages);
-									extractionArray = Array.concat(extractionArray, array);
+								    if (startsWith(osSystem, "Windows")) {
+								        array = newArray(pathOutputImages + "\\" + filename + "_filter.tif");
+								    } else {
+								        array = newArray(pathOutputImages + "/" + filename + "_filter.tif");
+								    }
+								    extractionArray = Array.concat(extractionArray, array);
 								}
 						}
 						else {
@@ -714,7 +728,11 @@ function mainMenu() {
 									generateMask(imageList[i], pathOutputImages + "/" + filename + "_mask.tif", messageROI);
 								}
 								if (selectedProcess != "Pre-processing only"){
-									array = newArray(pathOutputImages);
+									if (startsWith(osSystem, "Windows")) {
+										array = newArray(pathOutputImages + "\\" + filename + "_filter.tif");
+									} else {
+										array = newArray(pathOutputImages + "/" + filename + "_filter.tif");
+									}
 									extractionArray = Array.concat(extractionArray, array);
 								}
 							}
