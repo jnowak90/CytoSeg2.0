@@ -174,7 +174,6 @@ class GaugingGui:
                         self.filename = ""
             else:
                 self.imagename = self.filename.split(self.slash)[-1]
-                self.filename = self.filename + self.slash + self.imagename + "_filter.tif"
                 if os.path.exists(self.filename[:-11] + "_mask.tif"):
                     self.displayImage()
                 else:
